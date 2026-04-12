@@ -22,10 +22,10 @@ export default function RouteCard({ route }: Props) {
       <div className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-gray-100 h-full flex flex-col">
         {/* Image */}
         <div className="relative h-44 bg-gray-100 overflow-hidden">
-          {route.preview_image ? (
+          {route.cover_image ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={route.preview_image}
+              src={route.cover_image}
               alt={route.title}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
@@ -37,9 +37,9 @@ export default function RouteCard({ route }: Props) {
               🗺️
             </div>
           )}
-          {route.is_premium && (
+          {!route.is_free && (
             <div className="absolute top-3 left-3 bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-1 rounded-full">
-              ✨ Премиум
+              💎 Премиум
             </div>
           )}
           <div className="absolute top-3 right-3 bg-black/50 backdrop-blur-sm text-white text-xs font-semibold px-2 py-1 rounded-full">
@@ -77,16 +77,13 @@ export default function RouteCard({ route }: Props) {
               </svg>
               {route.distance_km} км
             </span>
-            {route.tags.slice(0, 2).map((tag) => (
+            {(route.waypoints_preview ?? []).slice(0, 1).map((wp) => (
               <span
-                key={tag}
+                key={wp.id}
                 className="px-2 py-0.5 rounded-full font-medium"
-                style={{
-                  background: `${TAG_COLORS[tag] || accent}15`,
-                  color: TAG_COLORS[tag] || accent,
-                }}
+                style={{ background: `${accent}15`, color: accent }}
               >
-                {tag}
+                {wp.name}
               </span>
             ))}
           </div>

@@ -23,7 +23,7 @@ export async function generateMetadata({
     openGraph: {
       title: route.title,
       description: route.description?.slice(0, 160),
-      images: route.preview_image ? [route.preview_image] : [],
+      images: route.cover_image ? [route.cover_image] : [],
     },
   };
 }

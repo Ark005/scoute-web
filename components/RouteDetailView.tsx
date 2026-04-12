@@ -3,28 +3,27 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useState } from "react";
-import { RouteDetail, Stop } from "@/lib/types";
+import { RouteDetail, Waypoint } from "@/lib/types";
 
 const RouteMap = dynamic(() => import("./RouteMap"), { ssr: false });
+
+const REGION_LABELS: Record<string, string> = {
+  central: "Центральная Россия",
+  northwest: "Северо-Запад",
+  south: "Юг России",
+  volga: "Поволжье",
+  ural: "Урал",
+  siberia: "Сибирь",
+  far_east: "Дальний Восток",
+};
 
 interface Props {
   route: RouteDetail;
 }
 
 export default function RouteDetailView({ route }: Props) {
-  const days = Array.from(
-    new Set(route.stops.map((s) => s.day))
-  ).sort((a, b) => a - b);
-
-  const [activeDay, setActiveDay] = useState(days[0] ?? 1);
   const [hoveredStop, setHoveredStop] = useState<number | null>(null);
-
-  const stopsByDay = days.reduce<Record<number, Stop[]>>((acc, d) => {
-    acc[d] = route.stops.filter((s) => s.day === d).sort((a, b) => a.order - b.order);
-    return acc;
-  }, {});
-
-  const allStops = stopsByDay[activeDay] ?? [];
+  const waypoints = route.waypoints_preview ?? [];
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "var(--bg)" }}>
@@ -37,63 +36,48 @@ export default function RouteDetailView({ route }: Props) {
           ← Все маршруты
         </Link>
         <h1 className="text-white text-xl font-extrabold leading-tight">{route.title}</h1>
-        <div className="flex gap-3 mt-2 text-white/60 text-sm">
-          <span>📍 {route.region}</span>
+        <div className="flex gap-3 mt-2 text-white/60 text-sm flex-wrap">
+          <span>📍 {REGION_LABELS[route.region] ?? route.region}</span>
           <span>🚗 {route.distance_km} км</span>
-          <span>
-            📅 {route.duration_days} {dayWord(route.duration_days)}
-          </span>
+          <span>📅 {route.duration_days} {dayWord(route.duration_days)}</span>
+          {route.is_free ? (
+            <span className="text-green-400 font-semibold">Бесплатно</span>
+          ) : (
+            <span className="text-yellow-400 font-semibold">от {route.price_rub} ₽</span>
+          )}
         </div>
       </div>
 
-      {/* Day tabs */}
-      {days.length > 1 && (
-        <div
-          className="flex gap-2 px-4 py-3 overflow-x-auto scrollbar-none"
-          style={{ background: "var(--dark)" }}
-        >
-          {days.map((d) => (
-            <button
-              key={d}
-              onClick={() => setActiveDay(d)}
-              className={`shrink-0 px-4 py-1.5 rounded-full text-sm font-semibold transition ${
-                activeDay === d ? "text-white" : "text-white/50 bg-white/10 hover:text-white"
-              }`}
-              style={activeDay === d ? { background: "var(--blue)" } : undefined}
-            >
-              День {d}
-            </button>
-          ))}
-        </div>
-      )}
-
       {/* Map + List split */}
       <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
-        {/* Map — top on mobile, right on desktop */}
+        {/* Map */}
         <div className="h-56 lg:h-auto lg:flex-1 lg:order-2 relative">
           <RouteMap
-            stops={allStops}
+            waypoints={waypoints}
+            polyline={route.polyline ?? []}
             hoveredStop={hoveredStop}
           />
         </div>
 
-        {/* Stop list — bottom on mobile, left on desktop */}
-        <div
-          className="lg:w-96 lg:order-1 overflow-y-auto"
-          style={{ maxHeight: "calc(100vh - 200px)" }}
-        >
+        {/* Stop list */}
+        <div className="lg:w-96 lg:order-1 overflow-y-auto" style={{ maxHeight: "calc(100vh - 200px)" }}>
           <div className="p-4 space-y-3">
-            {allStops.map((stop, idx) => (
-              <StopCard
-                key={stop.id}
-                stop={stop}
+            {route.description && (
+              <p className="text-sm leading-relaxed text-gray-600 bg-white rounded-xl p-3 border border-gray-100">
+                {route.description}
+              </p>
+            )}
+
+            {waypoints.map((wp, idx) => (
+              <WaypointCard
+                key={wp.id}
+                wp={wp}
                 index={idx + 1}
-                isHovered={hoveredStop === stop.id}
+                isHovered={hoveredStop === wp.id}
                 onHover={setHoveredStop}
               />
             ))}
 
-            {/* Plan CTA */}
             <Link
               href={`/routes/${route.slug}/plan`}
               className="block mt-4 text-center text-white text-sm font-bold py-3 rounded-xl transition hover:opacity-90"
@@ -108,23 +92,29 @@ export default function RouteDetailView({ route }: Props) {
   );
 }
 
-function StopCard({
-  stop,
-  index,
-  isHovered,
-  onHover,
+function WaypointCard({
+  wp, index, isHovered, onHover,
 }: {
-  stop: Stop;
+  wp: Waypoint;
   index: number;
   isHovered: boolean;
   onHover: (id: number | null) => void;
 }) {
+  const TYPE_ICONS: Record<string, string> = {
+    attraction: "🏛",
+    restaurant: "🍽",
+    hotel: "🏨",
+    parking: "🅿️",
+    gas: "⛽",
+    viewpoint: "🌄",
+  };
+
   return (
     <div
       className={`bg-white rounded-xl p-3 border transition cursor-pointer ${
         isHovered ? "border-blue-400 shadow-md" : "border-gray-100 shadow-sm"
       }`}
-      onMouseEnter={() => onHover(stop.id)}
+      onMouseEnter={() => onHover(wp.id)}
       onMouseLeave={() => onHover(null)}
     >
       <div className="flex gap-3">
@@ -136,26 +126,21 @@ function StopCard({
         </div>
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-sm leading-tight" style={{ color: "var(--dark)" }}>
-            {stop.name}
+            {TYPE_ICONS[wp.waypoint_type] ?? "📍"} {wp.name}
           </p>
-          {stop.category && (
-            <p className="text-xs mt-0.5" style={{ color: "var(--grey)" }}>
-              {stop.category}
+          {wp.description && (
+            <p className="text-xs mt-1 line-clamp-2 leading-relaxed" style={{ color: "var(--grey)" }}>
+              {wp.description}
             </p>
           )}
-          {stop.description && (
-            <p
-              className="text-xs mt-1 line-clamp-2 leading-relaxed"
-              style={{ color: "var(--grey)" }}
-            >
-              {stop.description}
+          <div className="flex gap-3 mt-1 text-xs" style={{ color: "var(--grey)" }}>
+            {wp.duration_min > 0 && <span>⏱ {wp.duration_min} мин</span>}
+            {wp.distance_from_prev_km && <span>🚗 {wp.distance_from_prev_km} км</span>}
+          </div>
+          {wp.tip && (
+            <p className="text-xs mt-1 text-amber-600 bg-amber-50 rounded-lg px-2 py-1">
+              💡 {wp.tip}
             </p>
-          )}
-          {(stop.duration_minutes || stop.price_rub) && (
-            <div className="flex gap-3 mt-1.5 text-xs" style={{ color: "var(--grey)" }}>
-              {stop.duration_minutes && <span>⏱ {stop.duration_minutes} мин</span>}
-              {stop.price_rub && <span>💳 от {stop.price_rub} ₽</span>}
-            </div>
           )}
         </div>
       </div>

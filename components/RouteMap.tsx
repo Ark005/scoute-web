@@ -4,9 +4,8 @@ import { useEffect } from "react";
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { Stop } from "@/lib/types";
+import { Waypoint } from "@/lib/types";
 
-// Fix default marker icons
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
@@ -23,62 +22,58 @@ function makeNumberedIcon(n: number, active: boolean) {
       color:white;font-size:11px;font-weight:700;
       display:flex;align-items:center;justify-content:center;
       border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3);
-      transition:all 0.15s;
       transform:${active ? "scale(1.3)" : "scale(1)"};
+      transition:transform 0.15s;
     ">${n}</div>`,
     iconSize: [28, 28],
     iconAnchor: [14, 14],
   });
 }
 
-function FitBounds({ stops }: { stops: Stop[] }) {
+function FitBounds({ waypoints }: { waypoints: Waypoint[] }) {
   const map = useMap();
   useEffect(() => {
-    if (stops.length === 0) return;
-    const bounds = L.latLngBounds(stops.map((s) => [s.lat, s.lng]));
-    map.fitBounds(bounds, { padding: [40, 40], maxZoom: 14 });
-  }, [stops, map]);
+    if (waypoints.length === 0) return;
+    const bounds = L.latLngBounds(waypoints.map((s) => [s.latitude, s.longitude]));
+    map.fitBounds(bounds, { padding: [40, 40], maxZoom: 13 });
+  }, [waypoints, map]);
   return null;
 }
 
 interface Props {
-  stops: Stop[];
+  waypoints: Waypoint[];
+  polyline: [number, number][];
   hoveredStop: number | null;
 }
 
-export default function RouteMap({ stops, hoveredStop }: Props) {
+export default function RouteMap({ waypoints, polyline, hoveredStop }: Props) {
   const center: [number, number] =
-    stops.length > 0
-      ? [stops[0].lat, stops[0].lng]
+    waypoints.length > 0
+      ? [waypoints[0].latitude, waypoints[0].longitude]
       : [55.7558, 37.6176];
 
-  const polyline = stops.map((s): [number, number] => [s.lat, s.lng]);
+  const line: [number, number][] =
+    polyline.length > 0
+      ? polyline
+      : waypoints.map((w) => [w.latitude, w.longitude]);
 
   return (
-    <MapContainer
-      center={center}
-      zoom={10}
-      className="w-full h-full"
-      style={{ minHeight: "224px" }}
-    >
+    <MapContainer center={center} zoom={8} className="w-full h-full" style={{ minHeight: "224px" }}>
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
-      <FitBounds stops={stops} />
-      {polyline.length > 1 && (
-        <Polyline positions={polyline} color="#1B4DFF" weight={3} opacity={0.7} />
+      <FitBounds waypoints={waypoints} />
+      {line.length > 1 && (
+        <Polyline positions={line} color="#1B4DFF" weight={3} opacity={0.7} />
       )}
-      {stops.map((stop, idx) => (
+      {waypoints.map((wp, idx) => (
         <Marker
-          key={stop.id}
-          position={[stop.lat, stop.lng]}
-          icon={makeNumberedIcon(idx + 1, hoveredStop === stop.id)}
+          key={wp.id}
+          position={[wp.latitude, wp.longitude]}
+          icon={makeNumberedIcon(idx + 1, hoveredStop === wp.id)}
         >
-          <Popup>
-            <strong>{stop.name}</strong>
-            {stop.category && <p className="text-xs text-gray-500">{stop.category}</p>}
-          </Popup>
+          <Popup><strong>{wp.name}</strong></Popup>
         </Marker>
       ))}
     </MapContainer>

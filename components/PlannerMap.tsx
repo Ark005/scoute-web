@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { MapContainer, TileLayer, Marker, Polyline, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { Stop } from "@/lib/types";
+import { Waypoint } from "@/lib/types";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -30,26 +30,26 @@ function makeIcon(n: number, active: boolean) {
   });
 }
 
-function FitBounds({ stops }: { stops: Stop[] }) {
+function FitBounds({ waypoints }: { waypoints: Waypoint[] }) {
   const map = useMap();
   useEffect(() => {
-    if (stops.length === 0) return;
-    const bounds = L.latLngBounds(stops.map((s) => [s.lat, s.lng]));
+    if (waypoints.length === 0) return;
+    const bounds = L.latLngBounds(waypoints.map((w) => [w.latitude, w.longitude]));
     map.fitBounds(bounds, { padding: [40, 40], maxZoom: 14 });
-  }, [stops, map]);
+  }, [waypoints, map]);
   return null;
 }
 
 interface Props {
-  stops: Stop[];
+  waypoints: Waypoint[];
   hoveredStop: number | null;
 }
 
-export default function PlannerMap({ stops, hoveredStop }: Props) {
+export default function PlannerMap({ waypoints, hoveredStop }: Props) {
   const center: [number, number] =
-    stops.length > 0 ? [stops[0].lat, stops[0].lng] : [55.7558, 37.6176];
+    waypoints.length > 0 ? [waypoints[0].latitude, waypoints[0].longitude] : [55.7558, 37.6176];
 
-  const polyline = stops.map((s): [number, number] => [s.lat, s.lng]);
+  const polyline = waypoints.map((w): [number, number] => [w.latitude, w.longitude]);
 
   return (
     <MapContainer center={center} zoom={10} className="w-full h-full" style={{ minHeight: "224px" }}>
@@ -57,15 +57,15 @@ export default function PlannerMap({ stops, hoveredStop }: Props) {
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
-      <FitBounds stops={stops} />
+      <FitBounds waypoints={waypoints} />
       {polyline.length > 1 && (
         <Polyline positions={polyline} color="#1B4DFF" weight={3} opacity={0.7} dashArray="6 4" />
       )}
-      {stops.map((stop, idx) => (
+      {waypoints.map((wp, idx) => (
         <Marker
-          key={stop.id}
-          position={[stop.lat, stop.lng]}
-          icon={makeIcon(idx + 1, hoveredStop === stop.id)}
+          key={wp.id}
+          position={[wp.latitude, wp.longitude]}
+          icon={makeIcon(idx + 1, hoveredStop === wp.id)}
         />
       ))}
     </MapContainer>

@@ -1,5 +1,16 @@
-export interface RouteTag {
+export interface Waypoint {
+  id: number;
+  order: number;
   name: string;
+  description: string;
+  latitude: number;
+  longitude: number;
+  waypoint_type: string;
+  duration_min: number;
+  tip: string;
+  image_url: string;
+  distance_from_prev_km: number | null;
+  day?: number;
 }
 
 export interface RouteListItem {
@@ -8,23 +19,10 @@ export interface RouteListItem {
   region: string;
   distance_km: number;
   duration_days: number;
-  preview_image: string | null;
-  tags: string[];
-  is_premium: boolean;
-}
-
-export interface Stop {
-  id: number;
-  name: string;
-  description: string;
-  lat: number;
-  lng: number;
-  order: number;
-  day: number;
-  category: string;
-  image: string | null;
-  duration_minutes: number | null;
-  price_rub: number | null;
+  cover_image: string;
+  waypoints_preview: Waypoint[];
+  is_free: boolean;
+  price_rub: number;
 }
 
 export interface RouteDetail {
@@ -34,26 +32,9 @@ export interface RouteDetail {
   distance_km: number;
   duration_days: number;
   description: string;
-  preview_image: string | null;
-  tags: string[];
-  is_premium: boolean;
-  stops: Stop[];
-}
-
-export interface City {
-  name: string;
-  slug: string;
-  poi_count: number;
-}
-
-export interface POI {
-  id: number;
-  name: string;
-  description: string;
-  lat: number;
-  lng: number;
-  category: string;
-  image: string | null;
-  rating: number | null;
-  price_level: number | null;
+  cover_image: string;
+  is_free: boolean;
+  price_rub: number;
+  waypoints_preview: Waypoint[];
+  polyline: [number, number][];
 }
