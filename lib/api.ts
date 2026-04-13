@@ -5,6 +5,10 @@ const BASE =
 
 async function get<T>(path: string): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
+    headers: {
+      "User-Agent": "ScouteSSR/1.0 (+https://scoute.app)",
+      "Referer": "https://scoute.app",
+    },
     next: { revalidate: 3600 },
   });
   if (!res.ok) throw new Error(`API error ${res.status}: ${path}`);
