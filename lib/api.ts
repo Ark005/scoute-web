@@ -18,3 +18,7 @@ export async function getRoutes(): Promise<RouteListItem[]> {
 export async function getRoute(slug: string): Promise<RouteDetail> {
   return get<RouteDetail>(`/auto/routes/${slug}/`);
 }
+
+export async function getFeaturedRoutes(): Promise<RouteListItem[]> {
+  return get<RouteListItem[]>("/auto/featured/");
+}

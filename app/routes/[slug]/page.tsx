@@ -37,5 +37,25 @@ export default async function RouteDetailPage({
   const route = await getRoute(slug).catch(() => null);
   if (!route) notFound();
 
-  return <RouteDetailView route={route} />;
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "TouristTrip",
+    "name": route.title,
+    "description": route.description,
+    "touristType": "Автотуризм",
+    "itinerary": {
+      "@type": "ItemList",
+      "numberOfItems": route.waypoints_preview?.length ?? 0,
+    },
+  };
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <RouteDetailView route={route} />
+    </>
+  );
 }

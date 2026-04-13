@@ -8,12 +8,16 @@ import { RouteDetail, Waypoint } from "@/lib/types";
 const RouteMap = dynamic(() => import("./RouteMap"), { ssr: false });
 
 const REGION_LABELS: Record<string, string> = {
+  moscow_region: "Подмосковье",
   central: "Центральная Россия",
-  northwest: "Северо-Запад",
   south: "Юг России",
-  volga: "Поволжье",
-  ural: "Урал",
+  caucasus: "Кавказ",
   siberia: "Сибирь",
+  ural: "Урал",
+  volga: "Поволжье",
+  northwest: "Северо-Запад",
+  cis: "СНГ",
+  europe: "Европа",
   far_east: "Дальний Восток",
 };
 
@@ -116,6 +120,8 @@ function WaypointCard({
       }`}
       onMouseEnter={() => onHover(wp.id)}
       onMouseLeave={() => onHover(null)}
+      onTouchStart={() => onHover(wp.id)}
+      onTouchEnd={() => onHover(null)}
     >
       <div className="flex gap-3">
         <div
