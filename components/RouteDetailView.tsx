@@ -4,22 +4,9 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useState } from "react";
 import { RouteDetail, Waypoint } from "@/lib/types";
+import { REGION_LABELS } from "@/lib/regions";
 
 const RouteMap = dynamic(() => import("./RouteMap"), { ssr: false });
-
-const REGION_LABELS: Record<string, string> = {
-  moscow_region: "Подмосковье",
-  central: "Центральная Россия",
-  south: "Юг России",
-  caucasus: "Кавказ",
-  siberia: "Сибирь",
-  ural: "Урал",
-  volga: "Поволжье",
-  northwest: "Северо-Запад",
-  cis: "СНГ",
-  europe: "Европа",
-  far_east: "Дальний Восток",
-};
 
 interface Props {
   route: RouteDetail;

@@ -3,6 +3,9 @@
 import { useState, useMemo } from "react";
 import { RouteListItem } from "@/lib/types";
 import RouteCard from "./RouteCard";
+import { REGION_LABELS } from "@/lib/regions";
+
+export { REGION_LABELS };
 
 const DISTANCE_OPTIONS = [
   { label: "Все", value: 0 },
@@ -112,7 +115,7 @@ export default function RouteCatalog({ initialRoutes }: Props) {
                   regionFilter === r ? { background: "var(--orange)" } : undefined
                 }
               >
-                {r}
+                {REGION_LABELS[r] ?? r}
               </button>
             ))}
           </div>

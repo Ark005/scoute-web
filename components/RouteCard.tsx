@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { RouteListItem } from "@/lib/types";
-import { REGION_LABELS } from "./RouteCatalog";
+import { REGION_LABELS } from "@/lib/regions";
 
 interface Props {
   route: RouteListItem;
