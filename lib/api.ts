@@ -8,6 +8,7 @@ async function get<T>(path: string): Promise<T> {
     headers: {
       "User-Agent": "ScouteSSR/1.0 (+https://scoute.app)",
       "Referer": "https://scoute.app",
+      "Authorization": "Basic c2NvdXQ6U2NvdXQyMDI2IQ==",
     },
     next: { revalidate: 3600 },
   });

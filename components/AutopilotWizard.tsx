@@ -77,7 +77,7 @@ export default function AutopilotWizard() {
       params.set("max_days", String(maxDays));
       params.set("vehicle", v);
       if (tags.length > 0) params.set("tags", tags.join(","));
-      const res = await fetch(`${BASE}/auto/autopilot/?${params.toString()}`);
+      const res = await fetch(`${BASE}/auto/autopilot/?${params.toString()}`, { headers: { "Authorization": "Basic c2NvdXQ6U2NvdXQyMDI2IQ==" } });
       if (!res.ok) throw new Error("API error");
       const data = await res.json();
       setResults(Array.isArray(data) ? data : []);
