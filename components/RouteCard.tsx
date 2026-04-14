@@ -1,42 +1,58 @@
+"use client";
+
 import Link from "next/link";
+import { useState } from "react";
 import { RouteListItem } from "@/lib/types";
+import { REGION_LABELS } from "./RouteCatalog";
 
 interface Props {
   route: RouteListItem;
 }
 
-const TAG_COLORS: Record<string, string> = {
-  История: "#7C3AED",
-  Природа: "#059669",
-  Гастрономия: "#D97706",
-  Архитектура: "#0891B2",
-  Культура: "#DB2777",
-  Религия: "#6366F1",
+const REGION_GRADIENTS: Record<string, string> = {
+  moscow_region: "linear-gradient(135deg, #1B4DFF 0%, #7C3AED 100%)",
+  central:       "linear-gradient(135deg, #059669 0%, #1B4DFF 100%)",
+  south:         "linear-gradient(135deg, #F59E0B 0%, #EF4444 100%)",
+  caucasus:      "linear-gradient(135deg, #10B981 0%, #0891B2 100%)",
+  siberia:       "linear-gradient(135deg, #6366F1 0%, #1B4DFF 100%)",
+  ural:          "linear-gradient(135deg, #8B5CF6 0%, #3B82F6 100%)",
+  volga:         "linear-gradient(135deg, #3B82F6 0%, #10B981 100%)",
+  northwest:     "linear-gradient(135deg, #0EA5E9 0%, #6366F1 100%)",
+  cis:           "linear-gradient(135deg, #F97316 0%, #EF4444 100%)",
+  europe:        "linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%)",
 };
 
-export default function RouteCard({ route }: Props) {
-  const accent = "#1B4DFF";
+function GradientPlaceholder({ route }: { route: RouteListItem }) {
+  const gradient = REGION_GRADIENTS[route.region] ?? "linear-gradient(135deg, #1B4DFF 0%, #7C3AED 100%)";
+  const letter = route.title.charAt(0);
+  return (
+    <div className="w-full h-full flex items-center justify-center" style={{ background: gradient }}>
+      <span className="text-white font-extrabold opacity-30" style={{ fontSize: "64px" }}>{letter}</span>
+    </div>
+  );
+}
 
+function CoverImage({ route }: { route: RouteListItem }) {
+  const [broken, setBroken] = useState(false);
+  if (!route.cover_image || broken) return <GradientPlaceholder route={route} />;
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={route.cover_image}
+      alt={route.title}
+      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+      onError={() => setBroken(true)}
+    />
+  );
+}
+
+export default function RouteCard({ route }: Props) {
   return (
     <Link href={`/routes/${route.slug}`} className="block group">
       <div className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-gray-100 h-full flex flex-col">
         {/* Image */}
-        <div className="relative h-44 bg-gray-100 overflow-hidden">
-          {route.cover_image ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={route.cover_image}
-              alt={route.title}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            />
-          ) : (
-            <div
-              className="w-full h-full flex items-center justify-center text-4xl"
-              style={{ background: `${accent}15` }}
-            >
-              🗺️
-            </div>
-          )}
+        <div className="relative h-44 overflow-hidden">
+          <CoverImage route={route} />
           {!route.is_free && (
             <div className="absolute top-3 left-3 bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-1 rounded-full">
               💎 Премиум
@@ -50,7 +66,7 @@ export default function RouteCard({ route }: Props) {
         {/* Body */}
         <div className="p-4 flex flex-col flex-1">
           <p className="text-xs font-medium mb-1" style={{ color: "var(--grey)" }}>
-            {route.region}
+            {REGION_LABELS[route.region] ?? route.region}
           </p>
           <h2
             className="text-base font-bold leading-snug mb-2"
@@ -81,7 +97,7 @@ export default function RouteCard({ route }: Props) {
               <span
                 key={wp.id}
                 className="px-2 py-0.5 rounded-full font-medium"
-                style={{ background: `${accent}15`, color: accent }}
+                style={{ background: "#1B4DFF15", color: "#1B4DFF" }}
               >
                 {wp.name}
               </span>
