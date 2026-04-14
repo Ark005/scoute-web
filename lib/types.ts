@@ -38,3 +38,8 @@ export interface RouteDetail {
   waypoints_preview: Waypoint[];
   polyline: [number, number][];
 }
+
+export interface RouteWithTransport extends RouteDetail {
+  start_lat?: number;
+  start_lng?: number;
+}

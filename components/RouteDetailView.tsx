@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { RouteDetail, Waypoint } from "@/lib/types";
 import { REGION_LABELS } from "@/lib/regions";
+import TransportBlock from "./TransportBlock";
 
 const RouteMap = dynamic(() => import("./RouteMap"), { ssr: false });
 
@@ -59,6 +60,7 @@ export default function RouteDetailView({ route }: Props) {
               </p>
             )}
 
+            <TransportBlock slug={route.slug} startLat={(route as any).start_lat} startLng={(route as any).start_lng} />
             {waypoints.map((wp, idx) => (
               <WaypointCard
                 key={wp.id}
