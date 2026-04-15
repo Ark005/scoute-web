@@ -45,7 +45,7 @@ export default async function RouteDetailPage({
     "touristType": "Автотуризм",
     "itinerary": {
       "@type": "ItemList",
-      "numberOfItems": route.waypoints_preview?.length ?? 0,
+      "numberOfItems": route.waypoints?.length ?? route.waypoints_preview?.length ?? 0,
     },
   };
 

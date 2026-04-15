@@ -1,3 +1,13 @@
+export interface Highlight {
+  name: string;
+  icon?: string;
+  type?: string;
+  duration_min?: number;
+  price_rub?: number;
+  description?: string;
+  tip?: string;
+}
+
 export interface Waypoint {
   id: number;
   order: number;
@@ -11,6 +21,15 @@ export interface Waypoint {
   image_url: string;
   distance_from_prev_km: number | null;
   day?: number;
+  // Hotel fields
+  hotel_url?: string;
+  hotel_price_from?: number | null;
+  // Gas fields
+  gas_brand?: string;
+  gas_discount?: string;
+  // Extended
+  images?: string[];
+  highlights?: Highlight[];
 }
 
 export interface RouteListItem {
@@ -36,7 +55,16 @@ export interface RouteDetail {
   is_free: boolean;
   price_rub: number;
   waypoints_preview: Waypoint[];
+  waypoints?: Waypoint[];
   polyline: [number, number][];
+  tags?: string[];
+  vehicle_type?: string;
+  best_season?: string;
+  difficulty?: string;
+  author_name?: string;
+  author_bio?: string;
+  author_avatar?: string;
+  fuel_consumption_l100?: number;
 }
 
 export interface RouteWithTransport extends RouteDetail {
