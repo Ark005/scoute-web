@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import Image from "next/image";
 import { useState, useCallback } from "react";
 import {
   DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEndEvent,
@@ -11,6 +12,16 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { RouteDetail, Waypoint } from "@/lib/types";
+
+const TYPE_ICONS: Record<string, string> = {
+  attraction: "🏛", restaurant: "🍽", hotel: "🏨",
+  parking: "🅿️", gas: "⛽", viewpoint: "🌄", border: "🛂",
+};
+const TYPE_LABELS: Record<string, string> = {
+  attraction: "Достопримечательность", restaurant: "Ресторан",
+  hotel: "Отель", parking: "Парковка", gas: "Заправка",
+  viewpoint: "Смотровая", border: "КПП",
+};
 
 const PlannerMap = dynamic(() => import("./PlannerMap"), { ssr: false });
 
@@ -33,7 +44,7 @@ function nearestNeighborTSP(wps: Waypoint[]): Waypoint[] {
 interface Props { route: RouteDetail; }
 
 export default function PlannerView({ route }: Props) {
-  const waypoints = route.waypoints_preview ?? [];
+  const waypoints = route.waypoints ?? route.waypoints_preview ?? [];
   const [order, setOrder] = useState<Waypoint[]>(waypoints);
   const [excluded, setExcluded] = useState<Waypoint[]>([]);
   const [hoveredStop, setHoveredStop] = useState<number | null>(null);
@@ -135,22 +146,114 @@ function SortableWaypointCard({ wp, index, isHovered, onHover, onExclude }: {
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: wp.id });
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
+  const [expanded, setExpanded] = useState(false);
+
+  const isRestaurant = wp.waypoint_type === "restaurant";
+  const isHotel = wp.waypoint_type === "hotel";
 
   return (
     <div ref={setNodeRef} style={style}
-      className={`bg-white rounded-xl border transition ${isHovered ? "border-blue-400 shadow-md" : "border-gray-100 shadow-sm"}`}
+      className={`bg-white rounded-xl border transition ${
+        wp.is_closed ? "border-red-200 bg-red-50/30" :
+        isHovered ? "border-blue-400 shadow-md" : "border-gray-100 shadow-sm"
+      }`}
       onMouseEnter={() => onHover(wp.id)} onMouseLeave={() => onHover(null)}
     >
       <div className="flex items-start gap-2 p-3">
+        {/* Drag handle */}
         <div {...attributes} {...listeners} className="shrink-0 mt-0.5 cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-500 select-none text-lg">⠿</div>
-        <div className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold mt-0.5" style={{ background: "var(--blue)" }}>{index}</div>
-        <div className="flex-1 min-w-0">
-          <p className="font-semibold text-sm leading-tight" style={{ color: "var(--dark)" }}>{wp.name}</p>
-          {wp.waypoint_type && <p className="text-xs mt-0.5" style={{ color: "var(--grey)" }}>{wp.waypoint_type}</p>}
-          {wp.duration_min > 0 && <p className="text-xs mt-1" style={{ color: "var(--grey)" }}>⏱ {wp.duration_min} мин</p>}
+
+        {/* Number */}
+        <div className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold mt-0.5" style={{ background: wp.is_closed ? "#ef4444" : "var(--blue)" }}>{index}</div>
+
+        {/* Thumbnail */}
+        {wp.image_url && (
+          <div className="shrink-0 w-12 h-12 rounded-lg overflow-hidden relative mt-0.5">
+            <Image src={wp.image_url} alt={wp.name} fill className="object-cover" sizes="48px" />
+          </div>
+        )}
+
+        {/* Content */}
+        <div className="flex-1 min-w-0 cursor-pointer" onClick={() => setExpanded(!expanded)}>
+          {/* Type label */}
+          <p className="text-[10px] uppercase tracking-wide font-semibold" style={{ color: "var(--grey)" }}>
+            {TYPE_ICONS[wp.waypoint_type] || "📍"} {TYPE_LABELS[wp.waypoint_type] || wp.waypoint_type}
+          </p>
+
+          {/* Name */}
+          <p className={`font-bold text-sm leading-tight ${expanded ? "" : "line-clamp-2"}`} style={{ color: "var(--dark)" }}>
+            {wp.name}
+            {wp.is_closed && <span className="ml-1 px-1 py-0.5 rounded text-[9px] font-bold bg-red-100 text-red-700">ЗАКРЫТ</span>}
+          </p>
+
+          {/* Meta row */}
+          <div className="flex gap-2 mt-1 text-[11px] flex-wrap" style={{ color: "var(--grey)" }}>
+            {wp.duration_min > 0 && <span>⏱ {formatMin(wp.duration_min)}</span>}
+            {wp.opening_hours && <span>🕐 {wp.opening_hours}</span>}
+            {wp.entrance_fee != null && wp.entrance_fee > 0 && <span>🎫 {wp.entrance_fee} ₽</span>}
+            {wp.entrance_fee === 0 && <span>🎫 Бесплатно</span>}
+            {isRestaurant && wp.avg_check && <span>💰 ~{wp.avg_check} ₽</span>}
+            {isHotel && wp.hotel_price_from && <span>💰 от {wp.hotel_price_from} ₽</span>}
+          </div>
+
+          {/* Expanded details */}
+          {expanded && (
+            <div className="mt-2 space-y-1">
+              {wp.is_closed && wp.closed_reason && (
+                <p className="text-xs text-red-600">🚫 {wp.closed_reason}</p>
+              )}
+              {wp.description && (
+                <p className="text-xs leading-relaxed whitespace-pre-line" style={{ color: "var(--grey)" }}>
+                  {wp.description}
+                </p>
+              )}
+              {wp.tip && (
+                <p className="text-xs text-amber-600 bg-amber-50 rounded px-2 py-1">💡 {wp.tip}</p>
+              )}
+              {isRestaurant && wp.menu_url && (
+                <a href={wp.menu_url} target="_blank" rel="noopener noreferrer"
+                  className="text-xs font-medium text-orange-600 hover:underline">Меню →</a>
+              )}
+              {isHotel && wp.hotel_url && (
+                <a href={wp.hotel_url} target="_blank" rel="noopener noreferrer"
+                  className="text-xs font-medium text-blue-600 hover:underline">Забронировать →</a>
+              )}
+              {wp.phone && <p className="text-xs" style={{ color: "var(--grey)" }}>📞 {wp.phone}</p>}
+              {wp.website_url && (
+                <a href={wp.website_url} target="_blank" rel="noopener noreferrer"
+                  className="text-xs font-medium text-blue-600 hover:underline">Сайт →</a>
+              )}
+
+              {/* Highlights */}
+              {wp.highlights && wp.highlights.length > 0 && (
+                <div className="mt-1 space-y-0.5">
+                  <p className="text-[10px] uppercase tracking-wide font-semibold" style={{ color: "var(--grey)" }}>Что посмотреть</p>
+                  {wp.highlights.map((h, i) => (
+                    <p key={i} className="text-xs" style={{ color: "var(--grey)" }}>
+                      {h.icon || "•"} {h.name}
+                      {h.duration_min ? ` · ${h.duration_min} мин` : ""}
+                      {h.price_rub ? ` · ${h.price_rub} ₽` : ""}
+                    </p>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
-        <button onClick={() => onExclude(wp)} className="shrink-0 text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-400 hover:bg-red-50 hover:text-red-400 transition">×</button>
+
+        {/* Expand indicator + remove */}
+        <div className="shrink-0 flex flex-col items-center gap-1">
+          <button onClick={() => onExclude(wp)} className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-400 hover:bg-red-50 hover:text-red-400 transition">×</button>
+          <span className="text-[10px] text-gray-300">{expanded ? "▲" : "▼"}</span>
+        </div>
       </div>
     </div>
   );
+}
+
+function formatMin(m: number): string {
+  if (m < 60) return `${m} мин`;
+  const h = Math.floor(m / 60);
+  const r = m % 60;
+  return r > 0 ? `${h}ч ${r}м` : `${h}ч`;
 }
