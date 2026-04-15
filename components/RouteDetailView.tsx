@@ -80,6 +80,7 @@ function groupByDay(waypoints: Waypoint[], totalDays: number): Map<number, Waypo
 export default function RouteDetailView({ route }: Props) {
   const [hoveredStop, setHoveredStop] = useState<number | null>(null);
   const [expandedDay, setExpandedDay] = useState<number | null>(1);
+  const [lightboxImg, setLightboxImg] = useState<string | null>(null);
 
   // Use full waypoints if available, fallback to preview
   const waypoints = route.waypoints ?? route.waypoints_preview ?? [];
@@ -98,6 +99,28 @@ export default function RouteDetailView({ route }: Props) {
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "var(--bg)" }}>
+      {/* Lightbox */}
+      {lightboxImg && (
+        <div
+          className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 cursor-pointer"
+          onClick={() => setLightboxImg(null)}
+        >
+          <button
+            className="absolute top-4 right-4 text-white text-3xl font-bold hover:opacity-70"
+            onClick={() => setLightboxImg(null)}
+          >
+            ×
+          </button>
+          <Image
+            src={lightboxImg}
+            alt="Фото"
+            width={1200}
+            height={800}
+            className="max-w-full max-h-[90vh] object-contain rounded-lg"
+          />
+        </div>
+      )}
+
       {/* Header */}
       <div style={{ background: "var(--dark)" }} className="px-5 pt-10 pb-5">
         <Link
@@ -237,6 +260,7 @@ export default function RouteDetailView({ route }: Props) {
                             index={wp.order}
                             isHovered={hoveredStop === wp.id}
                             onHover={setHoveredStop}
+                            onImageClick={setLightboxImg}
                           />
                         </div>
                       ))}
@@ -394,12 +418,13 @@ function DistanceConnector({ km, durationMin }: { km: number; durationMin: numbe
 /* ── Waypoint Card ───────────────────────────────── */
 
 function WaypointCard({
-  wp, index, isHovered, onHover,
+  wp, index, isHovered, onHover, onImageClick,
 }: {
   wp: Waypoint;
   index: number;
   isHovered: boolean;
   onHover: (id: number | null) => void;
+  onImageClick: (src: string) => void;
 }) {
   const isHotel = wp.waypoint_type === "hotel";
   const isRestaurant = wp.waypoint_type === "restaurant";
@@ -430,19 +455,36 @@ function WaypointCard({
             {TYPE_LABELS[wp.waypoint_type] || "Точка маршрута"}
           </p>
 
-          {/* Name */}
-          <p className="font-bold text-sm leading-tight mt-0.5" style={{ color: "var(--dark)" }}>
-            {TYPE_ICONS[wp.waypoint_type] ?? "📍"} {wp.name}
-          </p>
+          {/* Name + closed badge */}
+          <div className="flex items-center gap-2 mt-0.5">
+            <p className="font-bold text-sm leading-tight" style={{ color: "var(--dark)" }}>
+              {TYPE_ICONS[wp.waypoint_type] ?? "📍"} {wp.name}
+            </p>
+            {wp.is_closed && (
+              <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700 shrink-0">
+                ЗАКРЫТ
+              </span>
+            )}
+          </div>
 
-          {/* Image */}
+          {/* Closed reason */}
+          {wp.is_closed && wp.closed_reason && (
+            <p className="text-xs mt-1 text-red-600 bg-red-50 rounded-lg px-2 py-1">
+              🚫 {wp.closed_reason}
+            </p>
+          )}
+
+          {/* Image — clickable for lightbox */}
           {wp.image_url && (
-            <div className="mt-2 rounded-lg overflow-hidden relative h-32">
+            <div
+              className="mt-2 rounded-lg overflow-hidden relative h-32 cursor-zoom-in"
+              onClick={(e) => { e.stopPropagation(); onImageClick(wp.image_url); }}
+            >
               <Image
                 src={wp.image_url}
                 alt={wp.name}
                 fill
-                className="object-cover"
+                className="object-cover hover:scale-105 transition-transform duration-300"
                 sizes="400px"
               />
             </div>
@@ -450,14 +492,19 @@ function WaypointCard({
 
           {/* Description */}
           {wp.description && (
-            <p className="text-xs mt-2 leading-relaxed" style={{ color: "var(--grey)" }}>
+            <p className="text-xs mt-2 leading-relaxed whitespace-pre-line" style={{ color: "var(--grey)" }}>
               {wp.description}
             </p>
           )}
 
-          {/* Duration & meta */}
-          <div className="flex gap-3 mt-2 text-xs flex-wrap" style={{ color: "var(--grey)" }}>
-            {wp.duration_min > 0 && <span>⏱ {formatDuration(wp.duration_min)}</span>}
+          {/* Meta row: duration, hours, entrance fee */}
+          <div className="flex gap-2 mt-2 text-xs flex-wrap" style={{ color: "var(--grey)" }}>
+            {wp.duration_min > 0 && <MetaChip label={`⏱ ${formatDuration(wp.duration_min)}`} />}
+            {wp.opening_hours && <MetaChip label={`🕐 ${wp.opening_hours}`} />}
+            {wp.entrance_fee != null && wp.entrance_fee > 0 && (
+              <MetaChip label={`🎫 ${wp.entrance_fee} ₽`} />
+            )}
+            {wp.entrance_fee === 0 && <MetaChip label="🎫 Бесплатно" />}
           </div>
 
           {/* Hotel specific */}
@@ -468,23 +515,66 @@ function WaypointCard({
                   от {wp.hotel_price_from.toLocaleString("ru")} ₽ / ночь
                 </p>
               )}
-              {wp.hotel_url && (
-                <a
-                  href={wp.hotel_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-block mt-1 text-xs font-medium text-blue-600 hover:underline"
-                >
-                  Забронировать →
-                </a>
+              {wp.phone && (
+                <p className="text-xs text-blue-700 mt-0.5">📞 {wp.phone}</p>
               )}
+              <div className="flex gap-3 mt-1">
+                {wp.hotel_url && (
+                  <a
+                    href={wp.hotel_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs font-medium text-blue-600 hover:underline"
+                  >
+                    Забронировать →
+                  </a>
+                )}
+                {wp.website_url && (
+                  <a
+                    href={wp.website_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs font-medium text-blue-600 hover:underline"
+                  >
+                    Сайт →
+                  </a>
+                )}
+              </div>
             </div>
           )}
 
           {/* Restaurant specific */}
-          {isRestaurant && wp.tip && (
-            <div className="mt-2 bg-orange-50 rounded-lg p-2">
-              <p className="text-xs text-orange-700">🍴 {wp.tip}</p>
+          {isRestaurant && (
+            <div className="mt-2 bg-orange-50 rounded-lg p-2 space-y-1">
+              <div className="flex gap-3 text-xs text-orange-800 flex-wrap">
+                {wp.avg_check && (
+                  <span className="font-semibold">💰 Средний чек: {wp.avg_check} ₽</span>
+                )}
+                {wp.phone && <span>📞 {wp.phone}</span>}
+              </div>
+              {wp.tip && <p className="text-xs text-orange-700">🍴 {wp.tip}</p>}
+              <div className="flex gap-3">
+                {wp.menu_url && (
+                  <a
+                    href={wp.menu_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs font-medium text-orange-600 hover:underline"
+                  >
+                    Меню →
+                  </a>
+                )}
+                {wp.website_url && (
+                  <a
+                    href={wp.website_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs font-medium text-orange-600 hover:underline"
+                  >
+                    Сайт →
+                  </a>
+                )}
+              </div>
             </div>
           )}
 
@@ -496,7 +586,7 @@ function WaypointCard({
             </div>
           )}
 
-          {/* Tip (for non-restaurant, since restaurant shows tip above) */}
+          {/* Tip (for non-restaurant, since restaurant shows tip in its block) */}
           {wp.tip && !isRestaurant && (
             <p className="text-xs mt-2 text-amber-600 bg-amber-50 rounded-lg px-2 py-1">
               💡 {wp.tip}
@@ -529,16 +619,20 @@ function WaypointCard({
             </div>
           )}
 
-          {/* Additional images */}
+          {/* Additional images — clickable */}
           {wp.images && wp.images.length > 0 && (
             <div className="mt-2 flex gap-1.5 overflow-x-auto">
               {wp.images.map((img, i) => (
-                <div key={i} className="shrink-0 w-20 h-14 rounded-lg overflow-hidden relative">
+                <div
+                  key={i}
+                  className="shrink-0 w-20 h-14 rounded-lg overflow-hidden relative cursor-zoom-in"
+                  onClick={(e) => { e.stopPropagation(); onImageClick(img); }}
+                >
                   <Image
                     src={img}
                     alt={`${wp.name} ${i + 1}`}
                     fill
-                    className="object-cover"
+                    className="object-cover hover:scale-110 transition-transform"
                     sizes="80px"
                   />
                 </div>
@@ -548,6 +642,16 @@ function WaypointCard({
         </div>
       </div>
     </div>
+  );
+}
+
+/* ── Meta Chip ───────────────────────────────────── */
+
+function MetaChip({ label }: { label: string }) {
+  return (
+    <span className="px-1.5 py-0.5 rounded bg-gray-100 text-[11px]" style={{ color: "var(--grey)" }}>
+      {label}
+    </span>
   );
 }
 

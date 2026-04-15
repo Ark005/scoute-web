@@ -30,6 +30,15 @@ export interface Waypoint {
   // Extended
   images?: string[];
   highlights?: Highlight[];
+  // Practical info v3
+  opening_hours?: string;
+  is_closed?: boolean;
+  closed_reason?: string;
+  avg_check?: number | null;
+  menu_url?: string;
+  entrance_fee?: number | null;
+  phone?: string;
+  website_url?: string;
 }
 
 export interface RouteListItem {
