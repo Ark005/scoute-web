@@ -1,20 +1,21 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import Link from "next/link";
 import { RouteListItem } from "@/lib/types";
 import RouteCard from "./RouteCard";
 import { REGION_LABELS } from "@/lib/regions";
+import { CITIES } from "@/lib/cities-data";
 
 export { REGION_LABELS };
 
 const DISTANCE_OPTIONS = [
   { label: "Все", value: 0 },
-  { label: "до 50 км", value: 50 },
-  { label: "до 100 км", value: 100 },
-  { label: "до 150 км", value: 150 },
-  { label: "до 200 км", value: 200 },
-  { label: "до 300 км", value: 300 },
   { label: "до 500 км", value: 500 },
+  { label: "до 1000 км", value: 1000 },
+  { label: "до 1500 км", value: 1500 },
+  { label: "до 2000 км", value: 2000 },
+  { label: "до 3000 км", value: 3000 },
 ];
 
 interface Props {
@@ -25,9 +26,16 @@ export default function RouteCatalog({ initialRoutes }: Props) {
   const [maxDist, setMaxDist] = useState(0);
   const [search, setSearch] = useState("");
   const [regionFilter, setRegionFilter] = useState("");
+  const [tagFilter, setTagFilter] = useState("");
 
   const regions = useMemo(() => {
     const set = new Set(initialRoutes.map((r) => r.region));
+    return Array.from(set).sort();
+  }, [initialRoutes]);
+
+  const allTags = useMemo(() => {
+    const set = new Set<string>();
+    initialRoutes.forEach((r) => (r.tags ?? []).forEach((t) => set.add(t)));
     return Array.from(set).sort();
   }, [initialRoutes]);
 
@@ -35,6 +43,7 @@ export default function RouteCatalog({ initialRoutes }: Props) {
     return initialRoutes.filter((r) => {
       if (maxDist > 0 && r.distance_km > maxDist) return false;
       if (regionFilter && r.region !== regionFilter) return false;
+      if (tagFilter && !(r.tags ?? []).includes(tagFilter)) return false;
       if (
         search &&
         !r.title.toLowerCase().includes(search.toLowerCase()) &&
@@ -43,7 +52,18 @@ export default function RouteCatalog({ initialRoutes }: Props) {
         return false;
       return true;
     });
-  }, [initialRoutes, maxDist, regionFilter, search]);
+  }, [initialRoutes, maxDist, regionFilter, tagFilter, search]);
+
+  const matchedCities = useMemo(() => {
+    if (!search || search.length < 2) return [];
+    const q = search.toLowerCase();
+    return CITIES.filter(
+      (c) =>
+        c.name.toLowerCase().includes(q) ||
+        c.region.toLowerCase().includes(q) ||
+        c.tags.some((t) => t.toLowerCase().includes(q))
+    ).slice(0, 6);
+  }, [search]);
 
   return (
     <div className="min-h-screen" style={{ background: "var(--bg)" }}>
@@ -118,6 +138,61 @@ export default function RouteCatalog({ initialRoutes }: Props) {
                 {REGION_LABELS[r] ?? r}
               </button>
             ))}
+          </div>
+        )}
+
+        {/* Tag chips */}
+        {allTags.length > 0 && (
+          <div className="flex gap-2 overflow-x-auto pb-2 mt-2 scrollbar-none">
+            <button
+              onClick={() => setTagFilter("")}
+              className={`shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition ${
+                !tagFilter
+                  ? "text-white"
+                  : "bg-white text-gray-600 border border-gray-200 hover:border-green-300"
+              }`}
+              style={!tagFilter ? { background: "var(--blue)" } : undefined}
+            >
+              Всё
+            </button>
+            {allTags.map((tag) => (
+              <button
+                key={tag}
+                onClick={() => setTagFilter(tag === tagFilter ? "" : tag)}
+                className={`shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition ${
+                  tagFilter === tag
+                    ? "text-white"
+                    : "bg-white text-gray-600 border border-gray-200 hover:border-green-300"
+                }`}
+                style={tagFilter === tag ? { background: "var(--blue)" } : undefined}
+              >
+                {tag}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Cities in search results */}
+        {matchedCities.length > 0 && (
+          <div className="mt-4 mb-6">
+            <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: "var(--grey)" }}>
+              🏙 Городские гиды
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+              {matchedCities.map((city) => (
+                <Link
+                  key={city.slug}
+                  href={`/cities/${city.slug}`}
+                  className="flex items-center gap-3 bg-white rounded-xl p-3 border border-gray-100 hover:border-blue-300 hover:shadow-md transition group"
+                >
+                  <span className="text-2xl">{city.emoji}</span>
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold truncate" style={{ color: "var(--dark)" }}>{city.name}</p>
+                    <p className="text-xs truncate" style={{ color: "var(--grey)" }}>{city.region}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
           </div>
         )}
 

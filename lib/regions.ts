@@ -10,4 +10,6 @@ export const REGION_LABELS: Record<string, string> = {
   cis:           "СНГ",
   europe:        "Европа",
   far_east:      "Дальний Восток",
+  mideast:       "Ближний Восток",
+  asia:          "Азия",
 };

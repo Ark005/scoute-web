@@ -51,6 +51,7 @@ export interface RouteListItem {
   waypoints_preview: Waypoint[];
   is_free: boolean;
   price_rub: number;
+  tags?: string[];
 }
 
 export interface RouteDetail {
@@ -79,4 +80,35 @@ export interface RouteDetail {
 export interface RouteWithTransport extends RouteDetail {
   start_lat?: number;
   start_lng?: number;
+}
+
+export interface CityWeather {
+  temp: number;
+  description: string;
+  icon: string;
+}
+
+export interface CityPOI {
+  id: number;
+  type: "attraction" | "restaurant";
+  name: string;
+  category: string;
+  description?: string;
+  latitude?: number;
+  longitude?: number;
+  avg_time_min?: number;
+  rating?: number;
+  image_url?: string;
+  opening_hours?: { hours?: string; fee?: string; closed?: boolean } | string;
+  free_entry?: boolean;
+  entrance_fee?: number | null;
+  tip?: string;
+  address?: string;
+  phone?: string;
+  must_see?: boolean;
+  // restaurant fields
+  cuisine_type?: string;
+  price_range?: string;
+  avg_check?: number;
+  menu_url?: string;
 }

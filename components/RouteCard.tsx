@@ -75,6 +75,21 @@ export default function RouteCard({ route }: Props) {
             {route.title}
           </h2>
 
+          {/* Tags */}
+          {(route.tags ?? []).length > 0 && (
+            <div className="flex flex-wrap gap-1 mb-2">
+              {(route.tags ?? []).slice(0, 3).map((tag) => (
+                <span
+                  key={tag}
+                  className="px-2 py-0.5 rounded-full text-xs font-medium"
+                  style={{ background: "#1B4DFF12", color: "#1B4DFF" }}
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
+
           {/* Stats */}
           <div className="flex gap-3 text-xs mt-auto pt-2" style={{ color: "var(--grey)" }}>
             <span className="flex items-center gap-1">
