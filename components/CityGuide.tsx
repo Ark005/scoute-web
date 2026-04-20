@@ -238,7 +238,8 @@ function POIDetailPanel({ poi, inPlan, onToggle, onBack }: {
       {/* Photo / illustration */}
       <div className="relative flex-shrink-0" style={{ height: 200, background: hasPhoto ? "#e5e7eb" : pastel }}>
         {hasPhoto ? (
-          <Image src={poi.image_url!} alt={poi.name} fill className="object-cover" unoptimized />
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={poi.image_url!} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <span className="text-7xl select-none">{icon}</span>
@@ -377,7 +378,8 @@ function POICard({ poi, inPlan, onToggle, onClick }: {
       {/* Photo / illustration */}
       <div className="relative w-full overflow-hidden" style={{ height: 96, background: hasPhoto ? "#e5e7eb" : pastel }}>
         {hasPhoto ? (
-          <Image src={poi.image_url!} alt={poi.name} fill className="object-cover" sizes="(max-width: 768px) 50vw, 200px" unoptimized />
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={poi.image_url!} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <span className="text-4xl select-none">{icon}</span>
