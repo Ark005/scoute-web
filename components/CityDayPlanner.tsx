@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect } from "react";
 import {
   DndContext,
   DragEndEvent,
@@ -355,7 +355,6 @@ export default function CityDayPlanner({ pois, onRemove, onAutoFill, weather }: 
     return init;
   });
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
-  const pendingDistribute = useRef(false);
 
   // Sync new POIs from prop into unassigned bucket
   useEffect(() => {
@@ -534,19 +533,6 @@ export default function CityDayPlanner({ pois, onRemove, onAutoFill, weather }: 
     setBucketOrder(prev => ({ ...prev, [bucket]: keepIds, [targetBucket]: [...moveIds, ...(prev[targetBucket] ?? [])] }));
   }, [bucketOrder, pois, numDays]);
 
-  // Keep a fresh ref to distributeAcrossDays to avoid stale closure in effect
-  const distributeRef = useRef(distributeAcrossDays);
-  distributeRef.current = distributeAcrossDays;
-
-  // When auto-fill was requested and pois arrive, trigger distribution
-  useEffect(() => {
-    if (pendingDistribute.current && bucketOrder.unassigned.length > 0) {
-      pendingDistribute.current = false;
-      distributeRef.current();
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [bucketOrder.unassigned.length]);
-
   function poisForBucket(bucket: string): CityPOI[] {
     return (bucketOrder[bucket] ?? []).map(id => pois.find(p => p.id === id)).filter(Boolean) as CityPOI[];
   }
@@ -567,18 +553,7 @@ export default function CityDayPlanner({ pois, onRemove, onAutoFill, weather }: 
               + День
             </button>
           )}
-          <button
-            onClick={() => {
-              if (bucketOrder.unassigned.length > 0) {
-                distributeAcrossDays();
-              } else {
-                pendingDistribute.current = true;
-                onAutoFill?.();
-              }
-            }}
-            className="px-3 py-1 rounded-lg text-xs font-bold text-white transition hover:opacity-90"
-            style={{ background: "var(--orange)" }}
-          >
+          <button onClick={distributeAcrossDays} className="px-3 py-1 rounded-lg text-xs font-bold text-white transition hover:opacity-90" style={{ background: "var(--orange)" }}>
             ✨ Автозаполнение
           </button>
         </div>
