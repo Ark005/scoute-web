@@ -7,6 +7,7 @@ import dynamic from "next/dynamic";
 import { RouteListItem } from "@/lib/types";
 import { REGION_LABELS } from "@/lib/regions";
 import { CITIES } from "@/lib/cities-data";
+import { useDebounce } from "@/hooks/useDebounce";
 
 const HomeMap = dynamic(() => import("./HomeMap"), { ssr: false });
 
@@ -242,9 +243,11 @@ export default function HomeExplore({ routes }: Props) {
     return haversine(userPos.lat, userPos.lng, wp.latitude, wp.longitude);
   }, [userPos]);
 
+  const debouncedSearch = useDebounce(search, 150);
+
   // Filter routes
   const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
+    const q = debouncedSearch.trim().toLowerCase();
     return routes
       .filter((r) => {
         if (q && !r.title.toLowerCase().includes(q) && !r.region.toLowerCase().includes(q) && !(r.tags ?? []).some(t => t.toLowerCase().includes(q))) return false;
@@ -267,7 +270,7 @@ export default function HomeExplore({ routes }: Props) {
         if (maxDist === -1 && userPos) return routeDistFromUser(a) - routeDistFromUser(b);
         return 0;
       });
-  }, [routes, search, activeRegion, maxDist, userPos, routeDistFromUser]);
+  }, [routes, debouncedSearch, activeRegion, maxDist, userPos, routeDistFromUser]);
 
   const activeRoute = useMemo(
     () => (activeSlug ? routes.find(r => r.slug === activeSlug) ?? null : null),
@@ -276,14 +279,14 @@ export default function HomeExplore({ routes }: Props) {
 
   // City search results
   const cityResults = useMemo(() => {
-    const q = search.trim().toLowerCase();
+    const q = debouncedSearch.trim().toLowerCase();
     if (!q) return [];
     return CITIES.filter(c =>
       c.name.toLowerCase().includes(q) ||
       c.region.toLowerCase().includes(q) ||
       c.tags.some(t => t.toLowerCase().includes(q))
     ).slice(0, 4);
-  }, [search]);
+  }, [debouncedSearch]);
 
   return (
     <div className="flex flex-col" style={{ height: "calc(100vh - 56px)" }}>
