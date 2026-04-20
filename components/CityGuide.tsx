@@ -369,10 +369,11 @@ function POICard({ poi, inPlan, onToggle, onClick }: {
   const icon = categoryIcon(poi.category);
   const pastel = categoryPastel(poi.category);
   const hasPhoto = Boolean(poi.image_url);
+  const hoursStr = getOpeningHoursStr(poi);
 
   return (
     <div
-      className={`bg-white rounded-2xl border shadow-sm overflow-hidden cursor-pointer transition-all hover:shadow-md ${inPlan ? "border-blue-400 ring-2 ring-blue-100" : "border-gray-100"}`}
+      className={`group bg-white rounded-2xl border shadow-sm overflow-hidden cursor-pointer transition-all hover:shadow-md ${inPlan ? "border-blue-400 ring-2 ring-blue-100" : "border-gray-100"}`}
       onClick={onClick}
     >
       {/* Photo / illustration */}
@@ -397,10 +398,10 @@ function POICard({ poi, inPlan, onToggle, onClick }: {
           </span>
         )}
 
-        {/* Checkbox */}
+        {/* Checkbox — hidden until hover or when in plan */}
         <button
           onClick={(e) => { e.stopPropagation(); onToggle(); }}
-          className="absolute top-2 right-2 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all"
+          className={`absolute top-2 right-2 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${inPlan ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}
           style={{ background: inPlan ? "var(--blue)" : "rgba(255,255,255,0.9)", borderColor: inPlan ? "var(--blue)" : "#d1d5db" }}
         >
           {inPlan && (
@@ -413,14 +414,15 @@ function POICard({ poi, inPlan, onToggle, onClick }: {
 
       {/* Body */}
       <div className="p-2.5">
-        <p className="font-bold text-xs leading-tight line-clamp-1" style={{ color: "var(--dark)" }}>{poi.name}</p>
+        <p className="font-bold text-xs leading-tight line-clamp-2" style={{ color: "var(--dark)" }}>{poi.name}</p>
 
-        {/* Preview: rating + time */}
+        {/* Preview: rating + time + price */}
         <div className="flex gap-1.5 mt-1 text-[10px] flex-wrap" style={{ color: "var(--grey)" }}>
           {poi.rating && <span>⭐ {poi.rating}</span>}
           {poi.avg_time_min != null && poi.avg_time_min > 0 && (
             <span>⏱ {poi.avg_time_min < 60 ? `${poi.avg_time_min}м` : `${Math.floor(poi.avg_time_min / 60)}ч`}</span>
           )}
+          {poi.cuisine_type && <span>🍴 {poi.cuisine_type}</span>}
           {poi.avg_check != null && poi.avg_check > 0 && (
             <span>~{poi.avg_check.toLocaleString("ru")} ₽</span>
           )}
@@ -431,6 +433,9 @@ function POICard({ poi, inPlan, onToggle, onClick }: {
             <span className="text-green-600">Бесплатно</span>
           )}
         </div>
+        {hoursStr && (
+          <p className="text-[10px] mt-0.5 truncate" style={{ color: "var(--grey)" }}>🕐 {hoursStr}</p>
+        )}
       </div>
     </div>
   );
