@@ -1,4 +1,4 @@
-import { RouteListItem, RouteDetail, CityPOI, CityWeather } from "./types";
+import { RouteListItem, RouteDetail, CityPOI, CityWeather, CityInfo } from "./types";
 
 const BASE =
   process.env.NEXT_PUBLIC_API_URL || "https://scoute.app/api";
@@ -34,4 +34,16 @@ export async function getCityPOIs(slug: string): Promise<{ attractions: CityPOI[
 
 export async function getCityWeather(slug: string): Promise<CityWeather> {
   return get<CityWeather>(`/weather/?city=${slug}`);
+}
+
+export async function getCities(): Promise<CityInfo[]> {
+  return get<CityInfo[]>("/cities/");
+}
+
+export async function getCityPOIsFromAPI(slug: string): Promise<{
+  city: { id: number; name: string; slug: string; latitude: number; longitude: number };
+  attractions: CityPOI[];
+  restaurants: CityPOI[];
+}> {
+  return get(`/city-pois/?city=${slug}`);
 }

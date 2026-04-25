@@ -82,6 +82,16 @@ export interface RouteWithTransport extends RouteDetail {
   start_lng?: number;
 }
 
+export interface CityInfo {
+  id: number;
+  name: string;
+  slug: string;
+  latitude: number | null;
+  longitude: number | null;
+  attractions_count: number;
+  restaurants_count: number;
+}
+
 export interface CityWeather {
   temp: number;
   description: string;
