@@ -3,13 +3,18 @@ import { RouteListItem, RouteDetail, CityPOI, CityWeather, CityInfo } from "./ty
 const BASE =
   process.env.NEXT_PUBLIC_API_URL || "https://scoute.app/api";
 
+const isLocal = BASE.includes("localhost") || BASE.includes("127.0.0.1");
+
 async function get<T>(path: string): Promise<T> {
+  const headers: Record<string, string> = {
+    "User-Agent": "ScouteSSR/1.0 (+https://scoute.app)",
+    "Referer": "https://scoute.app",
+  };
+  if (!isLocal) {
+    headers["Authorization"] = "Basic c2NvdXQ6U2NvdXQyMDI2IQ==";
+  }
   const res = await fetch(`${BASE}${path}`, {
-    headers: {
-      "User-Agent": "ScouteSSR/1.0 (+https://scoute.app)",
-      "Referer": "https://scoute.app",
-      "Authorization": "Basic c2NvdXQ6U2NvdXQyMDI2IQ==",
-    },
+    headers,
     next: { revalidate: 3600 },
   });
   if (!res.ok) throw new Error(`API error ${res.status}: ${path}`);

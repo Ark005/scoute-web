@@ -5,14 +5,18 @@ import Link from "next/link";
 import Image from "next/image";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://scoute.app/api";
+const isLocal = BASE_URL.includes("localhost") || BASE_URL.includes("127.0.0.1");
 
 async function getPOIDetail(type: string, id: string) {
+  const headers: Record<string, string> = {
+    "User-Agent": "ScouteSSR/1.0 (+https://scoute.app)",
+    Referer: "https://scoute.app",
+  };
+  if (!isLocal) {
+    headers["Authorization"] = "Basic c2NvdXQ6U2NvdXQyMDI2IQ==";
+  }
   const res = await fetch(`${BASE_URL}/poi/${type}/${id}/`, {
-    headers: {
-      "User-Agent": "ScouteSSR/1.0 (+https://scoute.app)",
-      Referer: "https://scoute.app",
-      Authorization: "Basic c2NvdXQ6U2NvdXQyMDI2IQ==",
-    },
+    headers,
     next: { revalidate: 3600 },
   });
   if (!res.ok) return null;
