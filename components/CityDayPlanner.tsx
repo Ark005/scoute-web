@@ -258,7 +258,7 @@ function DayColumn({ dayIndex, pois, onRemove, onDelete, onOptimize, onOverflow,
     if (d.includes("fog") || d.includes("туман")) return "🌫";
     return "🌤";
   }
-  const weatherLabel = weather ? `${weatherEmoji(weather)} ${Math.round(weather.temp)}°` : "🌤 --°";
+  const weatherLabel = weather && weather.temp != null && !isNaN(weather.temp) ? `${weatherEmoji(weather)} ${Math.round(weather.temp)}°` : "";
 
   return (
     <div

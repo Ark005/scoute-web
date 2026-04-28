@@ -401,7 +401,7 @@ function POICard({ poi, inPlan, onToggle, onClick }: {
         {/* Checkbox — hidden until hover or when in plan */}
         <button
           onClick={(e) => { e.stopPropagation(); onToggle(); }}
-          className={`absolute top-2 right-2 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${inPlan ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}
+          className={`absolute top-2 right-2 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all`}
           style={{ background: inPlan ? "var(--blue)" : "rgba(255,255,255,0.9)", borderColor: inPlan ? "var(--blue)" : "#d1d5db" }}
         >
           {inPlan && (
