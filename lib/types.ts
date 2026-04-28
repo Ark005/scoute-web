@@ -98,6 +98,38 @@ export interface CityWeather {
   icon: string;
 }
 
+// Trip Calculator
+export interface CityBudget {
+  city: string;
+  slug: string;
+  currency: string;
+  cover_image: string;
+  hotel: {
+    budget: { price: number; label: string; image: string };
+    mid: { price: number; label: string; image: string };
+    premium: { price: number; label: string; image: string };
+  };
+  meal: {
+    budget: { price: number; label: string };
+    mid: { price: number; label: string };
+    premium: { price: number; label: string };
+  };
+  transport_daily: number;
+}
+
+export interface TripBreakdown {
+  city: string;
+  slug: string;
+  currency: string;
+  days: number;
+  breakdown: {
+    hotel: { per_night: number; total: number; level: string };
+    food: { per_meal: number; meals_per_day: number; total: number; level: string };
+    transport: { per_day: number; total: number };
+  };
+  total: number;
+}
+
 export interface CityPOI {
   id: number;
   type: "attraction" | "restaurant";

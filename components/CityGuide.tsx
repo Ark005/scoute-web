@@ -39,7 +39,7 @@ const CATEGORY_PASTELS: Record<string, string> = {
 };
 
 function categoryPastel(cat: string): string {
-  const key = cat.toLowerCase();
+  const key = (cat || "").toLowerCase();
   for (const [k, v] of Object.entries(CATEGORY_PASTELS)) {
     if (key.includes(k)) return v;
   }
@@ -47,7 +47,7 @@ function categoryPastel(cat: string): string {
 }
 
 function categoryIcon(cat: string): string {
-  const key = cat.toLowerCase();
+  const key = (cat || "").toLowerCase();
   for (const [k, v] of Object.entries(CATEGORY_ICONS)) {
     if (key.includes(k)) return v;
   }
@@ -55,11 +55,11 @@ function categoryIcon(cat: string): string {
 }
 
 function categoryRu(cat: string): string {
-  const key = cat.toLowerCase();
+  const key = (cat || "").toLowerCase();
   for (const [k, v] of Object.entries(CATEGORY_RU)) {
     if (key.includes(k)) return v;
   }
-  return cat.charAt(0).toUpperCase() + cat.slice(1);
+  return cat ? cat.charAt(0).toUpperCase() + cat.slice(1) : "";
 }
 
 function haversine(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -204,7 +204,7 @@ function POIDetailPanel({ poi, inPlan, onToggle, onBack }: {
   // Museums / galleries — show audio guide
   const hasAudioGuide = Boolean(poi.description) && (
     ["museum", "gallery", "history", "church", "monument", "architecture", "culture", "religion"]
-      .some(k => poi.category.toLowerCase().includes(k))
+      .some(k => (poi.category || "").toLowerCase().includes(k))
   );
 
   return (
