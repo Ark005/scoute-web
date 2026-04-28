@@ -61,18 +61,20 @@ export default function TripCalculator({ budgets }: Props) {
 
   const city = budgets.find((b) => b.slug === citySlug);
 
+  // API list returns flat numbers, detail returns {price, label}
+  const hp = (v: any) => (typeof v === "number" ? v : v?.price ?? 0);
+
   const calc = useMemo(() => {
     if (!city) return null;
-
     const hotelPrices = {
-      budget: city.hotel.budget.price,
-      mid: city.hotel.mid.price,
-      premium: city.hotel.premium.price,
+      budget: hp(city.hotel.budget),
+      mid: hp(city.hotel.mid),
+      premium: hp(city.hotel.premium),
     };
     const mealPrices = {
-      budget: city.meal.budget.price,
-      mid: city.meal.mid.price,
-      premium: city.meal.premium.price,
+      budget: hp(city.meal.budget),
+      mid: hp(city.meal.mid),
+      premium: hp(city.meal.premium),
     };
 
     const hotelPerNight = hotelPrices[hotelLevel];
@@ -195,7 +197,7 @@ export default function TripCalculator({ budgets }: Props) {
                 <div className="text-2xl mb-1">{LEVEL_EMOJI[level]}</div>
                 <div className="text-xs text-gray-500">{LEVEL_LABELS[level]}</div>
                 <div className="text-lg font-bold mt-1">
-                  ${city?.hotel[level].price ?? 0}
+                  ${hp(city?.hotel[level]) ?? 0}
                   <span className="text-xs text-gray-400 font-normal">/ночь</span>
                 </div>
               </button>
@@ -221,10 +223,10 @@ export default function TripCalculator({ budgets }: Props) {
               >
                 <div className="text-2xl mb-1">{MEAL_EMOJI[level]}</div>
                 <div className="text-xs text-gray-500">
-                  {city?.meal[level].label ?? LEVEL_LABELS[level]}
+                  {(typeof city?.meal[level] === "object" ? city?.meal[level]?.label : null) ?? LEVEL_LABELS[level]}
                 </div>
                 <div className="text-lg font-bold mt-1">
-                  ${city?.meal[level].price ?? 0}
+                  ${hp(city?.meal[level]) ?? 0}
                   <span className="text-xs text-gray-400 font-normal">/приём</span>
                 </div>
               </button>
