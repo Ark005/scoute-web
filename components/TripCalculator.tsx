@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import type { CityBudget } from "@/lib/types";
 
 type Level = "budget" | "mid" | "premium";
@@ -37,7 +37,27 @@ export default function TripCalculator({ budgets }: Props) {
   const [travelers, setTravelers] = useState(2);
   const [travelMode, setTravelMode] = useState<TravelMode>("flight");
   const [flightCost, setFlightCost] = useState(250);
+  const [flightLoading, setFlightLoading] = useState(false);
+  const [flightSource, setFlightSource] = useState("");
   const [fuelBudget, setFuelBudget] = useState(150);
+
+  // Auto-fetch flight price when city or travel mode changes
+  useEffect(() => {
+    if (travelMode !== "flight" || !citySlug) return;
+    setFlightLoading(true);
+    fetch(`https://scoute.app/api/flight-price/?origin=MOW&destination=${citySlug}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.price_usd) {
+          setFlightCost(Math.round(data.price_usd));
+          setFlightSource(
+            `Aviasales: от ${data.price_rub?.toLocaleString()} руб (~$${Math.round(data.price_usd)})`
+          );
+        }
+      })
+      .catch(() => {})
+      .finally(() => setFlightLoading(false));
+  }, [citySlug, travelMode]);
 
   const city = budgets.find((b) => b.slug === citySlug);
 
@@ -278,6 +298,12 @@ export default function TripCalculator({ budgets }: Props) {
                 onChange={(e) => setFlightCost(Number(e.target.value))}
                 className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-blue-400 focus:outline-none"
               />
+              {flightLoading && (
+                <p className="text-xs text-blue-500 mt-1">Загрузка цен Aviasales...</p>
+              )}
+              {flightSource && !flightLoading && (
+                <p className="text-xs text-green-600 mt-1">{flightSource}</p>
+              )}
             </div>
           )}
           {travelMode === "car" && (

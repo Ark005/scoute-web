@@ -53,6 +53,10 @@ export async function getCityBudget(slug: string): Promise<CityBudget> {
   return get<CityBudget>(`/trip-calculator/?city=${slug}`);
 }
 
+export async function getFlightPrice(destination: string, origin = "MOW"): Promise<{ price_rub: number | null; price_usd: number | null }> {
+  return get<{ price_rub: number | null; price_usd: number | null }>(`/flight-price/?origin=${origin}&destination=${destination}`);
+}
+
 export async function getCityPOIsFromAPI(slug: string): Promise<{
   city: { id: number; name: string; slug: string; latitude: number; longitude: number };
   attractions: CityPOI[];
