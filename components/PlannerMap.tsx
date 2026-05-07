@@ -5,6 +5,7 @@ import { MapContainer, TileLayer, Marker, Polyline, useMap } from "react-leaflet
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { Waypoint } from "@/lib/types";
+import MapAttributionFix from "./MapAttributionFix";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -57,6 +58,7 @@ export default function PlannerMap({ waypoints, hoveredStop }: Props) {
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
+      <MapAttributionFix />
       <FitBounds waypoints={waypoints} />
       {polyline.length > 1 && (
         <Polyline positions={polyline} color="#1B4DFF" weight={3} opacity={0.7} dashArray="6 4" />

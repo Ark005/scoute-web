@@ -5,6 +5,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { CityEntry } from "@/lib/cities-data";
+import MapAttributionFix from "./MapAttributionFix";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 
@@ -86,6 +87,7 @@ export default function CitiesMap({ cities, coords, activeSlug, onSelect }: Prop
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
 
+      <MapAttributionFix />
       <FlyTo cities={citiesWithCoords} coords={coords} activeSlug={activeSlug} />
 
       {citiesWithCoords.map(city => (

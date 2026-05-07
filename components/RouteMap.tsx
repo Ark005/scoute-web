@@ -5,6 +5,7 @@ import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from "react-
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { Waypoint } from "@/lib/types";
+import MapAttributionFix from "./MapAttributionFix";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -63,6 +64,7 @@ export default function RouteMap({ waypoints, polyline, hoveredStop }: Props) {
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
         url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
       />
+      <MapAttributionFix />
       <FitBounds waypoints={waypoints} />
       {line.length > 1 && (
         <Polyline positions={line} color="#1B4DFF" weight={3} opacity={0.7} />

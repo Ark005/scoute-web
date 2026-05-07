@@ -5,6 +5,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { RouteListItem } from "@/lib/types";
+import MapAttributionFix from "./MapAttributionFix";
 
 // Fix default icon
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -90,6 +91,7 @@ export default function HomeMap({ routes, activeRoute, onSelect }: Props) {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
+        <MapAttributionFix />
         <FitAll routes={routes} />
 
         {/* Custom zoom control (bottom right) */}
