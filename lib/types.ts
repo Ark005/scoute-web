@@ -51,6 +51,7 @@ export interface RouteListItem {
   waypoints_preview: Waypoint[];
   is_free: boolean;
   price_rub: number;
+  tags?: string[];
 }
 
 export interface RouteDetail {
@@ -79,4 +80,77 @@ export interface RouteDetail {
 export interface RouteWithTransport extends RouteDetail {
   start_lat?: number;
   start_lng?: number;
+}
+
+export interface CityInfo {
+  id: number;
+  name: string;
+  slug: string;
+  latitude: number | null;
+  longitude: number | null;
+  attractions_count: number;
+  restaurants_count: number;
+}
+
+export interface CityWeather {
+  temp: number;
+  description: string;
+  icon: string;
+}
+
+// Trip Calculator
+export interface CityBudget {
+  city: string;
+  slug: string;
+  currency: string;
+  cover_image: string;
+  hotel: {
+    budget: { price: number; label: string; image: string };
+    mid: { price: number; label: string; image: string };
+    premium: { price: number; label: string; image: string };
+  };
+  meal: {
+    budget: { price: number; label: string };
+    mid: { price: number; label: string };
+    premium: { price: number; label: string };
+  };
+  transport_daily: number;
+}
+
+export interface TripBreakdown {
+  city: string;
+  slug: string;
+  currency: string;
+  days: number;
+  breakdown: {
+    hotel: { per_night: number; total: number; level: string };
+    food: { per_meal: number; meals_per_day: number; total: number; level: string };
+    transport: { per_day: number; total: number };
+  };
+  total: number;
+}
+
+export interface CityPOI {
+  id: number;
+  type: "attraction" | "restaurant";
+  name: string;
+  category: string;
+  description?: string;
+  latitude?: number;
+  longitude?: number;
+  avg_time_min?: number;
+  rating?: number;
+  image_url?: string;
+  opening_hours?: { hours?: string; fee?: string; closed?: boolean } | string;
+  free_entry?: boolean;
+  entrance_fee?: number | null;
+  tip?: string;
+  address?: string;
+  phone?: string;
+  must_see?: boolean;
+  // restaurant fields
+  cuisine_type?: string;
+  price_range?: string;
+  avg_check?: number;
+  menu_url?: string;
 }

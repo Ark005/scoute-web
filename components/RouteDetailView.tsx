@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useState, useMemo } from "react";
 import { RouteDetail, Waypoint } from "@/lib/types";
 import { REGION_LABELS } from "@/lib/regions";
+import { CITIES } from "@/lib/cities-data";
 import TransportBlock from "./TransportBlock";
 
 const RouteMap = dynamic(() => import("./RouteMap"), { ssr: false });
@@ -155,14 +156,33 @@ export default function RouteDetailView({ route }: Props) {
           )}
         </div>
 
-        {/* Tags */}
+        {/* Tags — city tags are clickable links */}
         {route.tags && route.tags.length > 0 && (
           <div className="flex gap-1.5 mt-2 flex-wrap">
-            {route.tags.map((tag) => (
-              <span key={tag} className="px-2 py-0.5 rounded-full text-xs bg-white/10 text-white/70">
-                {tag}
-              </span>
-            ))}
+            {route.tags.map((tag) => {
+              const city = CITIES.find(c =>
+                c.name.toLowerCase() === tag.toLowerCase() ||
+                c.name.toLowerCase().includes(tag.toLowerCase())
+              );
+              if (city) {
+                return (
+                  <Link
+                    key={tag}
+                    href={`/cities/${city.slug}`}
+                    className="px-2 py-0.5 rounded-full text-xs font-semibold transition hover:bg-blue-500"
+                    style={{ background: "rgba(59,130,246,0.35)", color: "white" }}
+                    title={`Гид по ${city.name}`}
+                  >
+                    {city.emoji} {tag} →
+                  </Link>
+                );
+              }
+              return (
+                <span key={tag} className="px-2 py-0.5 rounded-full text-xs bg-white/10 text-white/70">
+                  {tag}
+                </span>
+              );
+            })}
           </div>
         )}
       </div>
@@ -455,8 +475,8 @@ function WaypointCard({
             {TYPE_LABELS[wp.waypoint_type] || "Точка маршрута"}
           </p>
 
-          {/* Name + closed badge */}
-          <div className="flex items-center gap-2 mt-0.5">
+          {/* Name + closed badge + city link */}
+          <div className="flex items-center gap-2 mt-0.5 flex-wrap">
             <p className="font-bold text-sm leading-tight" style={{ color: "var(--dark)" }}>
               {TYPE_ICONS[wp.waypoint_type] ?? "📍"} {wp.name}
             </p>
@@ -465,6 +485,24 @@ function WaypointCard({
                 ЗАКРЫТ
               </span>
             )}
+            {/* City guide link if waypoint name matches a city */}
+            {(() => {
+              const city = CITIES.find(c =>
+                wp.name.toLowerCase().includes(c.name.toLowerCase()) ||
+                c.name.toLowerCase().includes(wp.name.toLowerCase().split(" ")[0])
+              );
+              return city ? (
+                <Link
+                  href={`/cities/${city.slug}`}
+                  onClick={e => e.stopPropagation()}
+                  className="px-2 py-0.5 rounded-full text-[10px] font-bold transition hover:opacity-80"
+                  style={{ background: "#EFF6FF", color: "var(--blue)", border: "1px solid #BFDBFE" }}
+                  title={`Городской гид: ${city.name}`}
+                >
+                  {city.emoji} Гид по городу →
+                </Link>
+              ) : null;
+            })()}
           </div>
 
           {/* Closed reason */}

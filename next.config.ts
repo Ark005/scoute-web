@@ -2,7 +2,13 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
-    domains: ["scoute.app", "217.28.223.106", "localhost"],
+    remotePatterns: [
+      { hostname: "scoute.app" },
+      { hostname: "217.28.223.106" },
+      { hostname: "localhost" },
+      { hostname: "upload.wikimedia.org" },
+      { hostname: "commons.wikimedia.org" },
+    ],
   },
 };
 
