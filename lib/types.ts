@@ -51,6 +51,7 @@ export interface RouteListItem {
   waypoints_preview: Waypoint[];
   is_free: boolean;
   price_rub: number;
+  tags?: string[];
 }
 
 export interface RouteDetail {
