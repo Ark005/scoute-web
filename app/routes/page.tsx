@@ -1,7 +1,7 @@
 import { getRoutes } from "@/lib/api";
 import RouteCatalog from "@/components/RouteCatalog";
 
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Маршруты по России — Scout",

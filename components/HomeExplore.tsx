@@ -362,6 +362,24 @@ export default function HomeExplore({ routes }: Props) {
           style={{ width: 420, borderRight: "1px solid #e5e7eb", background: "#F9FAFB" }}
         >
           <div className="py-2 px-2">
+            {/* Calculator promo */}
+            {!debouncedSearch && (
+              <Link
+                href="/calculator"
+                className="flex items-center gap-3 p-3 mb-2 rounded-2xl border transition-all hover:shadow-md"
+                style={{ background: "linear-gradient(135deg, #1B4DFF 0%, #0e35cc 100%)", borderColor: "transparent" }}
+              >
+                <div className="shrink-0 w-10 h-10 rounded-xl flex items-center justify-center text-xl" style={{ background: "rgba(255,255,255,0.15)" }}>
+                  🧮
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-sm text-white">Калькулятор стоимости поездки</p>
+                  <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.75)" }}>Перелёт · отель · маршрут · бюджет</p>
+                </div>
+                <span className="text-white text-sm font-semibold shrink-0">→</span>
+              </Link>
+            )}
+
             {/* City results when searching */}
             {cityResults.length > 0 && (
               <div className="mb-3">
