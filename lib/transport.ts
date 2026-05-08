@@ -3,6 +3,8 @@
 // flight_iata — код аэропорта назначения (Aviasales)
 // train_city — название города для Туту.ру
 
+import { affiliateUrl } from "./affiliate";
+
 export interface TransportOption {
   car_km: number;
   car_hours: number;
@@ -102,7 +104,7 @@ export function aviasalesUrl(iata: string): string {
   d.setDate(d.getDate() + 30);
   const dd = String(d.getDate()).padStart(2, "0");
   const mm = String(d.getMonth() + 1).padStart(2, "0");
-  return `https://www.aviasales.ru/search/MOW${dd}${mm}${iata}1`;
+  return affiliateUrl(`https://www.aviasales.ru/search/MOW${dd}${mm}${iata}1`, { subId: iata });
 }
 
 export function tutuUrl(city: string): string {

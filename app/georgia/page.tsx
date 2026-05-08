@@ -3,6 +3,7 @@ import Image from "next/image";
 import type { Metadata } from "next";
 import { getRoutes, getCities, getCityPOIs, getCityBudgets } from "@/lib/api";
 import type { CityInfo, RouteListItem, CityPOI, CityBudget } from "@/lib/types";
+import { aviasalesUrl } from "@/lib/transport";
 import GeorgiaMapClient from "@/components/GeorgiaMapClient";
 
 export const revalidate = 3600;
@@ -607,7 +608,7 @@ export default async function GeorgiaPage() {
                   💰 Расчёт по дням и городам
                 </Link>
                 <a
-                  href={`https://www.aviasales.ru/search/MOW${(() => { const d = new Date(); d.setDate(d.getDate() + 30); return String(d.getDate()).padStart(2, "0") + String(d.getMonth() + 1).padStart(2, "0"); })()}TBS1?marker=521784`}
+                  href={aviasalesUrl("TBS")}
                   target="_blank"
                   rel="noopener sponsored"
                   className="inline-flex items-center gap-2 px-5 py-3 rounded-xl font-semibold transition hover:scale-105"
@@ -618,7 +619,7 @@ export default async function GeorgiaPage() {
                 <a
                   href="https://www.booking.com/searchresults.html?ss=Tbilisi%2C+Georgia"
                   target="_blank"
-                  rel="noopener"
+                  rel="noopener sponsored"
                   className="inline-flex items-center gap-2 px-5 py-3 rounded-xl font-semibold transition hover:scale-105"
                   style={{ background: "#003B95", color: "white" }}
                 >
@@ -627,7 +628,7 @@ export default async function GeorgiaPage() {
                 <a
                   href="https://www.getyourguide.com/s/?q=Tbilisi"
                   target="_blank"
-                  rel="noopener"
+                  rel="noopener sponsored"
                   className="inline-flex items-center gap-2 px-5 py-3 rounded-xl font-semibold transition hover:scale-105"
                   style={{ background: "#F47B21", color: "white" }}
                 >
