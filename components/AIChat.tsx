@@ -40,7 +40,71 @@ export default function AIChat() {
   const [showBuildForm, setShowBuildForm] = useState(false);
   const [buildCity, setBuildCity] = useState("tbilisi");
   const [buildDays, setBuildDays] = useState(3);
+  const [listening, setListening] = useState(false);
+  const [voiceSupported, setVoiceSupported] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const recognitionRef = useRef<any>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const SR =
+      (window as any).SpeechRecognition ||
+      (window as any).webkitSpeechRecognition;
+    if (!SR) return;
+    setVoiceSupported(true);
+    const r = new SR();
+    r.lang = "ru-RU";
+    r.continuous = false;
+    r.interimResults = true;
+    r.maxAlternatives = 1;
+    let finalText = "";
+    r.onresult = (e: any) => {
+      let interim = "";
+      finalText = "";
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const t = e.results[i][0].transcript;
+        if (e.results[i].isFinal) finalText += t;
+        else interim += t;
+      }
+      setInput((finalText + interim).trim());
+    };
+    r.onend = () => {
+      setListening(false);
+      if (finalText.trim()) {
+        send(finalText.trim());
+        finalText = "";
+      }
+    };
+    r.onerror = () => setListening(false);
+    recognitionRef.current = r;
+    // Auto-start if ?voice=1 (e.g. from navbar mic)
+    const sp = new URLSearchParams(window.location.search);
+    if (sp.get("voice") === "1") {
+      setTimeout(() => {
+        try { r.start(); setListening(true); } catch {}
+      }, 300);
+    }
+    return () => {
+      try { r.stop(); } catch {}
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const toggleVoice = () => {
+    if (!recognitionRef.current) return;
+    if (listening) {
+      recognitionRef.current.stop();
+      setListening(false);
+    } else {
+      setInput("");
+      try {
+        recognitionRef.current.start();
+        setListening(true);
+      } catch {
+        setListening(false);
+      }
+    }
+  };
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -196,11 +260,33 @@ export default function AIChat() {
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Напишите что хотите от поездки…"
+          placeholder={listening ? "Слушаю…" : "Напишите или скажите что хотите от поездки…"}
           disabled={loading || building}
           className="flex-1 px-4 py-3 rounded-xl border outline-none focus:border-blue-400"
-          style={{ borderColor: "#E5E7EB", background: "white" }}
+          style={{ borderColor: listening ? "#FF6B1B" : "#E5E7EB", background: "white" }}
         />
+        {voiceSupported && (
+          <button
+            type="button"
+            onClick={toggleVoice}
+            disabled={loading || building}
+            aria-label={listening ? "Остановить запись" : "Голосовой ввод"}
+            title={listening ? "Идёт запись" : "Сказать голосом"}
+            className="w-12 h-12 rounded-xl flex items-center justify-center transition disabled:opacity-50"
+            style={{
+              background: listening ? "#FF6B1B" : "#F3F4F6",
+              color: listening ? "white" : "#374151",
+              animation: listening ? "pulse 1.2s ease-in-out infinite" : undefined,
+            }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+              <line x1="12" y1="19" x2="12" y2="23" />
+              <line x1="8" y1="23" x2="16" y2="23" />
+            </svg>
+          </button>
+        )}
         <button
           type="submit"
           disabled={loading || building || !input.trim()}
@@ -210,6 +296,12 @@ export default function AIChat() {
           ➤
         </button>
       </form>
+      <style>{`
+        @keyframes pulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.06); }
+        }
+      `}</style>
 
       {!showBuildForm ? (
         <button

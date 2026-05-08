@@ -50,10 +50,10 @@ export default function NavBar() {
 
         {/* Right cluster: mic + CTA */}
         <div className="hidden md:flex items-center gap-3 shrink-0">
-          <button
-            type="button"
+          <Link
+            href="/autopilot?voice=1"
             aria-label="Голосовой ввод"
-            title="Голосовой ввод (скоро)"
+            title="Сказать голосом — открыть AI-чат"
             className="w-9 h-9 rounded-full flex items-center justify-center transition hover:bg-white/10"
             style={{ color: "white" }}
           >
@@ -63,7 +63,7 @@ export default function NavBar() {
               <line x1="12" y1="19" x2="12" y2="23" />
               <line x1="8" y1="23" x2="16" y2="23" />
             </svg>
-          </button>
+          </Link>
           <Link
             href="/autopilot"
             className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl font-bold text-sm transition hover:scale-105"
