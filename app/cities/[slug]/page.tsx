@@ -94,10 +94,28 @@ export default async function CityPage({
     // weather is optional
   }
 
-  // Грузинские города → новый Flutter-style explorer (3 таба + planner)
+  // Грузинские города → новый Flutter-style explorer (3 таба + planner + афиша + рестораны)
   if (FLUTTER_STYLE_CITIES.has(slug) && pois.length > 0) {
     const ruName = (CITIES.find((c) => c.slug === slug)?.name) || cityData.name;
-    return <CityExplorer citySlug={slug} cityName={ruName} pois={pois} />;
+
+    // Афиша
+    let events: any[] = [];
+    try {
+      const r = await fetch(`https://scoute.app/api/events/${slug}/`, {
+        headers: {
+          "User-Agent": "ScouteSSR/1.0",
+          "Authorization": "Basic c2NvdXQ6U2NvdXQyMDI2IQ==",
+          "Referer": "https://scoute.app",
+        },
+        next: { revalidate: 3600 },
+      });
+      if (r.ok) {
+        const d = await r.json();
+        events = d.events || [];
+      }
+    } catch {}
+
+    return <CityExplorer citySlug={slug} cityName={ruName} pois={pois} events={events} />;
   }
 
   return <CityGuide city={cityData} pois={pois} error={error} weather={weather} />;
