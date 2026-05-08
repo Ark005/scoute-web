@@ -1,6 +1,7 @@
 import AIChat from "@/components/AIChat";
 import RotatingRestaurants from "@/components/RotatingRestaurants";
 import CulturalAtlas from "@/components/CulturalAtlas";
+import EventsCalendar from "@/components/EventsCalendar";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -61,8 +62,31 @@ async function getGeorgianRestaurants() {
   return flat.slice(0, 16);
 }
 
+async function getTbilisiEvents() {
+  try {
+    const r = await fetch(
+      "https://scoute.app/api/events/tbilisi/",
+      {
+        headers: {
+          "User-Agent": "ScouteSSR/1.0",
+          "Authorization": "Basic c2NvdXQ6U2NvdXQyMDI2IQ==",
+        },
+        next: { revalidate: 3600 },
+      },
+    );
+    if (!r.ok) return [];
+    const d = await r.json();
+    return d.events || [];
+  } catch {
+    return [];
+  }
+}
+
 export default async function AutopilotPage() {
-  const restaurants = await getGeorgianRestaurants();
+  const [restaurants, events] = await Promise.all([
+    getGeorgianRestaurants(),
+    getTbilisiEvents(),
+  ]);
 
   return (
     <main>
@@ -91,6 +115,7 @@ export default async function AutopilotPage() {
       </div>
       <AIChat />
       <RotatingRestaurants restaurants={restaurants} />
+      <EventsCalendar events={events} />
       <CulturalAtlas />
     </main>
   );
