@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import "./globals.css";
 import NavBar from "@/components/NavBar";
 
@@ -17,6 +18,10 @@ export default function RootLayout({
   return (
     <html lang="ru" className="h-full">
       <body className="min-h-full flex flex-col">
+        <Script
+          src="https://emrld.ltd/NTIxNzg0.js?t=521784"
+          strategy="beforeInteractive"
+        />
         <NavBar />
         {children}
       </body>
