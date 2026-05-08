@@ -161,9 +161,14 @@ export default function CityExplorer({ citySlug, cityName, pois }: Props) {
       </div>
 
       <div className="max-w-screen-2xl mx-auto px-4 py-5">
-        <div className="grid gap-5" style={{
-          gridTemplateColumns: showLeft && showRight ? "1.2fr 1fr" : "1fr",
-        }}>
+        <div
+          className={
+            "grid gap-5 " +
+            (showLeft && showRight
+              ? "grid-cols-1 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]"
+              : "grid-cols-1")
+          }
+        >
           {/* LEFT — POIs */}
           {showLeft && (
             <div>
