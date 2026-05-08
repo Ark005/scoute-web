@@ -208,8 +208,12 @@ export default function RouteDetailView({ route }: Props) {
               </p>
             )}
 
-            {/* Transport options */}
-            <TransportBlock slug={route.slug} startLat={(route as any).start_lat} startLng={(route as any).start_lng} />
+            {/* Transport options — координаты берём из первой waypoint, Django их отдельно не отдаёт */}
+            <TransportBlock
+              slug={route.slug}
+              startLat={route.waypoints?.[0]?.latitude}
+              startLng={route.waypoints?.[0]?.longitude}
+            />
 
             {/* Quick info cards */}
             <QuickInfoBar

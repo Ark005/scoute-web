@@ -108,5 +108,7 @@ export function aviasalesUrl(iata: string): string {
 }
 
 export function tutuUrl(city: string): string {
+  // TODO: Travelpayouts не работает с Tutu.ru — отдельно регнуться в Tutu Affiliate
+  // (https://booking.tutu.ru/affiliate/) когда дойдут руки, и обернуть здесь.
   return `https://www.tutu.ru/poezda/wizard/?st1=%D0%9C%D0%BE%D1%81%D0%BA%D0%B2%D0%B0&st2=${encodeURIComponent(city)}&direction=from`;
 }
