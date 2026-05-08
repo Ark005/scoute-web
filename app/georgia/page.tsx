@@ -1,8 +1,21 @@
 import Link from "next/link";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import type { Metadata } from "next";
-import { getRoutes, getCities, getCityPOIs } from "@/lib/api";
-import type { CityInfo, RouteListItem, CityPOI } from "@/lib/types";
+import { getRoutes, getCities, getCityPOIs, getCityBudgets } from "@/lib/api";
+import type { CityInfo, RouteListItem, CityPOI, CityBudget } from "@/lib/types";
+
+const GeorgiaMap = dynamic(() => import("@/components/GeorgiaMap"), {
+  ssr: false,
+  loading: () => (
+    <div
+      style={{ height: "min(70vh, 560px)", minHeight: 360, background: "#F1ECDF" }}
+      className="w-full flex items-center justify-center text-gray-400 text-sm"
+    >
+      Загружаем карту…
+    </div>
+  ),
+});
 
 export const revalidate = 3600;
 
@@ -82,14 +95,17 @@ async function getCityHero(slug: string): Promise<{ name: string; image: string;
 }
 
 export default async function GeorgiaPage() {
-  const [allCities, allRoutes] = await Promise.all([
+  const [allCities, allRoutes, allBudgets] = await Promise.all([
     getCities().catch(() => [] as CityInfo[]),
     getRoutes().catch(() => [] as RouteListItem[]),
+    getCityBudgets().catch(() => [] as CityBudget[]),
   ]);
 
   const georgianSet = new Set(GEORGIA_CITY_SLUGS);
   const cities = allCities.filter((c) => georgianSet.has(c.slug));
   const routes = allRoutes.filter(isGeorgianRoute);
+  const budgets = allBudgets.filter((b) => georgianSet.has(b.slug));
+  const tbilisiBudget = budgets.find((b) => b.slug === "tbilisi") || budgets[0] || null;
 
   const heroData = await Promise.all(cities.map((c) => getCityHero(c.slug)));
   const cityCards = cities.map((c, i) => ({
@@ -188,6 +204,11 @@ export default async function GeorgiaPage() {
             </div>
           </div>
         </div>
+      </section>
+
+      {/* MAP — country regions */}
+      <section className="border-y" style={{ borderColor: "#E5E7EB" }}>
+        <GeorgiaMap />
       </section>
 
       <main className="max-w-screen-xl mx-auto px-4 py-12">
@@ -426,6 +447,127 @@ export default async function GeorgiaPage() {
             </div>
           </div>
         </section>
+
+        {/* Budget */}
+        {tbilisiBudget && (() => {
+          const hp = (v: any) => (typeof v === "number" ? v : v?.price ?? 0);
+          const RUB = 92;
+          const fmtRub = (usd: number) =>
+            `₽${Math.round(usd * RUB).toLocaleString("ru-RU")}`;
+          const transport = tbilisiBudget.transport_daily as unknown as number;
+          const tiers = [
+            {
+              level: "budget" as const,
+              label: "Бюджетно",
+              hint: "хостел / гостевой дом, домашняя кухня, маршрутки",
+              hotel: hp((tbilisiBudget.hotel as any).budget),
+              meal: hp((tbilisiBudget.meal as any).budget),
+              tone: { ring: "#10B981", bg: "#ECFDF5" },
+            },
+            {
+              level: "mid" as const,
+              label: "Средне",
+              hint: "3-4★ отель, рестораны, такси Bolt",
+              hotel: hp((tbilisiBudget.hotel as any).mid),
+              meal: hp((tbilisiBudget.meal as any).mid),
+              tone: { ring: "#3B82F6", bg: "#EFF6FF" },
+            },
+            {
+              level: "premium" as const,
+              label: "Премиум",
+              hint: "бутики, винные туры, дегустации, гид",
+              hotel: hp((tbilisiBudget.hotel as any).premium),
+              meal: hp((tbilisiBudget.meal as any).premium),
+              tone: { ring: "#F59E0B", bg: "#FFFBEB" },
+            },
+          ];
+          return (
+            <section className="mb-20">
+              <div className="mb-8">
+                <div className="text-xs uppercase tracking-[0.2em] text-gray-500 mb-2">
+                  Бюджет
+                </div>
+                <h2
+                  className="font-extrabold mb-3"
+                  style={{
+                    fontFamily: 'Georgia, "Times New Roman", serif',
+                    fontSize: "clamp(28px, 4vw, 44px)",
+                    color: "var(--dark)",
+                  }}
+                >
+                  Сколько стоит Грузия
+                </h2>
+                <p className="text-gray-600 max-w-2xl leading-relaxed">
+                  Реальные цены по Тбилиси, на человека в день. Без перелёта.
+                  Для других городов и автомаршрутов — точный расчёт ниже.
+                </p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
+                {tiers.map((t) => {
+                  const daily = t.hotel + t.meal * 3 + transport;
+                  return (
+                    <div
+                      key={t.level}
+                      className="rounded-2xl p-6 transition hover:shadow-lg"
+                      style={{ background: t.tone.bg, border: `1px solid ${t.tone.ring}30` }}
+                    >
+                      <div
+                        className="text-xs uppercase tracking-wider font-bold mb-1"
+                        style={{ color: t.tone.ring }}
+                      >
+                        {t.label}
+                      </div>
+                      <div
+                        className="font-extrabold leading-none mb-1"
+                        style={{
+                          fontFamily: 'Georgia, "Times New Roman", serif',
+                          fontSize: "clamp(32px, 4vw, 44px)",
+                          color: "var(--dark)",
+                        }}
+                      >
+                        {fmtRub(daily)}
+                      </div>
+                      <div className="text-xs text-gray-500 mb-4">
+                        в день / человек
+                      </div>
+                      <div className="text-xs text-gray-600 mb-4 italic">{t.hint}</div>
+                      <div className="space-y-1.5 text-sm" style={{ color: "var(--dark)" }}>
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">🏨 Отель ночь</span>
+                          <span className="font-mono font-semibold">{fmtRub(t.hotel)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">🍽 Еда (3 раза)</span>
+                          <span className="font-mono font-semibold">{fmtRub(t.meal * 3)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">🚗 Транспорт</span>
+                          <span className="font-mono font-semibold">{fmtRub(transport)}</span>
+                        </div>
+                        <div
+                          className="flex justify-between pt-2 mt-2 border-t"
+                          style={{ borderColor: `${t.tone.ring}40`, color: "var(--dark)" }}
+                        >
+                          <span className="font-bold">Неделя на двоих</span>
+                          <span className="font-mono font-bold">{fmtRub(daily * 7 * 2)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="text-center">
+                <Link
+                  href="/calculator"
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition hover:scale-105"
+                  style={{ background: "var(--dark)", color: "white" }}
+                >
+                  💰 Точный расчёт по дням и городам →
+                </Link>
+              </div>
+            </section>
+          );
+        })()}
 
         {/* Bottom CTA */}
         <section
