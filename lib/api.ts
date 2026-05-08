@@ -1,11 +1,18 @@
 import { RouteListItem, RouteDetail, CityPOI, CityWeather, CityInfo, CityBudget, TripBreakdown } from "./types";
 
-const BASE =
-  process.env.NEXT_PUBLIC_API_URL || "https://scoute.app/api";
+// Browser → через nginx scoute.app/api (с Basic-auth).
+// Server → напрямую в Django по localhost:8000 (минует nginx, у которого
+// /api/ режет UA с любой подстрокой 'Go-http-client'/'python-requests' и др.).
+const PUBLIC_BASE = process.env.NEXT_PUBLIC_API_URL || "https://scoute.app/api";
+const SERVER_BASE = process.env.SCOUT_INTERNAL_API_URL || "http://127.0.0.1:8000/api";
 
-const isLocal = BASE.includes("localhost") || BASE.includes("127.0.0.1");
+function pickBase(): string {
+  return typeof window === "undefined" ? SERVER_BASE : PUBLIC_BASE;
+}
 
 async function get<T>(path: string): Promise<T> {
+  const base = pickBase();
+  const isLocal = base.includes("localhost") || base.includes("127.0.0.1");
   const headers: Record<string, string> = {
     "User-Agent": "ScouteSSR/1.0 (+https://scoute.app)",
     "Referer": "https://scoute.app",
@@ -13,7 +20,7 @@ async function get<T>(path: string): Promise<T> {
   if (!isLocal) {
     headers["Authorization"] = "Basic c2NvdXQ6U2NvdXQyMDI2IQ==";
   }
-  const res = await fetch(`${BASE}${path}`, {
+  const res = await fetch(`${base}${path}`, {
     headers,
     next: { revalidate: 3600 },
   });

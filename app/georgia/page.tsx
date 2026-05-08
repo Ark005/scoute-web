@@ -54,6 +54,28 @@ const GEORGIA_CITY_SLUGS = [
   "gori",
 ];
 
+// API возвращает name на латинице для части городов (старые seed'ы).
+// Русские имена для display.
+const CITY_DISPLAY_NAMES: Record<string, string> = {
+  tbilisi: "Тбилиси",
+  batumi: "Батуми",
+  kutaisi: "Кутаиси",
+  mtskheta: "Мцхета",
+  sighnaghi: "Сигнахи",
+  telavi: "Телави",
+  borjomi: "Боржоми",
+  bakuriani: "Бакуриани",
+  gudauri: "Гудаури",
+  kazbegi: "Казбеги",
+  mestia: "Местия",
+  khevsureti: "Хевсуретия",
+  tusheti: "Тушетия",
+  racha: "Рача",
+  chiatura: "Чиатура",
+  javakheti: "Джавахетия",
+  gori: "Гори",
+};
+
 const HERO_IMAGE = "https://scoute.app/media/cached_images/attraction_1244_c08aca0098.jpg"; // Sameba
 
 function isGeorgianRoute(r: RouteListItem): boolean {
