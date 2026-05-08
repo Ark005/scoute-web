@@ -1,3 +1,4 @@
+import type React from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
@@ -50,13 +51,6 @@ export async function generateMetadata({
   };
 }
 
-function formatItem(it: any): string {
-  if (!it) return "";
-  const time = it.time || it.start_time || "";
-  const name = it.name || it.poi_name || it.title || "";
-  return `${time} ${name}`.trim();
-}
-
 function getDays(program: any): any[] {
   if (!program) return [];
   if (Array.isArray(program?.days)) return program.days;
@@ -67,11 +61,71 @@ function getDays(program: any): any[] {
 
 function getDayItems(day: any): any[] {
   if (!day) return [];
+  if (Array.isArray(day.slots)) return day.slots;
   if (Array.isArray(day.items)) return day.items;
   if (Array.isArray(day.activities)) return day.activities;
   if (Array.isArray(day.poi)) return day.poi;
   if (Array.isArray(day.attractions)) return day.attractions;
   return [];
+}
+
+function renderSlot(it: any): React.ReactNode {
+  const time = it.time || it.start_time || "";
+  const name = it.name || it.poi_name || it.title || "";
+
+  if (it.type === "transit") {
+    const mode = it.mode || "walk";
+    const min = it.minutes ?? it.duration_min ?? "";
+    const km = it.distance_km != null ? `${it.distance_km} км` : "";
+    const modeLabel: Record<string, string> = {
+      walk: "пешком",
+      car: "на машине",
+      taxi: "на такси",
+      transit: "транспортом",
+    };
+    return (
+      <span className="text-xs text-gray-400 italic">
+        ↓ {min ? `${min} мин ` : ""}
+        {modeLabel[mode] || mode}
+        {km ? ` (${km})` : ""}
+      </span>
+    );
+  }
+
+  if (it.type === "start") {
+    return (
+      <>
+        <span className="font-mono text-gray-500 mr-2">{time || "—"}</span>
+        <span className="font-semibold">📍 Старт: {name}</span>
+      </>
+    );
+  }
+
+  if (it.type === "lunch" || it.type === "dinner" || it.type === "breakfast") {
+    const icon = it.type === "breakfast" ? "☕" : it.type === "dinner" ? "🌙" : "🍽";
+    return (
+      <>
+        <span className="font-mono text-gray-500 mr-2">{time || "—"}</span>
+        <span>{icon} {name || "Обед"}</span>
+        {it.duration_min && (
+          <span className="text-gray-500"> · {it.duration_min} мин</span>
+        )}
+      </>
+    );
+  }
+
+  return (
+    <>
+      <span className="font-mono text-gray-500 mr-2">{time || "—"}</span>
+      <span style={{ color: "var(--dark)" }}>{name}</span>
+      {it.duration_min && (
+        <span className="text-gray-500"> · {it.duration_min} мин</span>
+      )}
+      {it.description && !it.duration_min && (
+        <span className="text-gray-500"> · {it.description}</span>
+      )}
+    </>
+  );
 }
 
 export default async function TripPage({
@@ -172,15 +226,8 @@ export default async function TripPage({
                         <li
                           key={j}
                           className="text-sm leading-relaxed"
-                          style={{ color: "var(--dark)" }}
                         >
-                          <span className="font-mono text-gray-500 mr-2">
-                            {it.time || it.start_time || "—"}
-                          </span>
-                          {it.name || it.poi_name || it.title || formatItem(it)}
-                          {it.description && (
-                            <span className="text-gray-500"> · {it.description}</span>
-                          )}
+                          {renderSlot(it)}
                         </li>
                       ))}
                     </ul>

@@ -5,10 +5,11 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 const NAV_LINKS = [
+  { href: "/georgia", label: "Грузия" },
   { href: "/routes", label: "Маршруты" },
-  { href: "/calculator", label: "Калькулятор" },
-  { href: "/autopilot", label: "Автопилот" },
   { href: "/cities", label: "Города" },
+  { href: "/autopilot", label: "AI-чат" },
+  { href: "/calculator", label: "Калькулятор" },
 ];
 
 export default function NavBar() {
