@@ -67,12 +67,23 @@ export default async function AutopilotPage() {
   return (
     <main>
       <div className="max-w-2xl mx-auto px-4 pt-6">
-        <h1
-          className="text-2xl md:text-3xl font-extrabold mb-2"
-          style={{ color: "var(--dark)" }}
-        >
-          🤖 AI-планировщик
-        </h1>
+        <div className="flex items-center gap-3 mb-2">
+          <div
+            className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-base"
+            style={{ background: "#FF6B1B" }}
+          >
+            S
+          </div>
+          <div>
+            <div
+              className="font-extrabold leading-tight"
+              style={{ fontSize: 18, color: "var(--dark)" }}
+            >
+              Scout Agent
+            </div>
+            <div className="text-xs text-gray-500">AI-турагент</div>
+          </div>
+        </div>
         <p className="text-sm text-gray-600">
           Опишите поездку как другу — куда, на сколько, что важно. AI соберёт программу
           по часам, сохранит и пришлёт ссылку открыть в приложении.
