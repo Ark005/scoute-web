@@ -11,12 +11,20 @@ async function get<T>(path: string): Promise<T> {
   if (!isLocal) {
     headers["Authorization"] = "Basic c2NvdXQ6U2NvdXQyMDI2IQ==";
   }
-  const res = await fetch(`${BASE}${path}`, {
-    headers,
-    next: { revalidate: 3600 },
-  });
-  if (!res.ok) throw new Error(`API error ${res.status}: ${path}`);
-  return res.json();
+  try {
+    const res = await fetch(`${BASE}${path}`, {
+      headers,
+      next: { revalidate: 3600 },
+    });
+    if (!res.ok) {
+      console.error(`[api] ${BASE}${path} → ${res.status} ${res.statusText}`);
+      throw new Error(`API error ${res.status}: ${path}`);
+    }
+    return res.json();
+  } catch (e: any) {
+    console.error(`[api] FETCH FAIL ${BASE}${path} → ${e?.cause?.code || e?.code || e?.message}`);
+    throw e;
+  }
 }
 
 export async function getRoutes(): Promise<RouteListItem[]> {
