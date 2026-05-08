@@ -1,5 +1,6 @@
 import AIChat from "@/components/AIChat";
 import RotatingRestaurants from "@/components/RotatingRestaurants";
+import CulturalAtlas from "@/components/CulturalAtlas";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -79,6 +80,7 @@ export default async function AutopilotPage() {
       </div>
       <AIChat />
       <RotatingRestaurants restaurants={restaurants} />
+      <CulturalAtlas />
     </main>
   );
 }
