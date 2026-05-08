@@ -576,14 +576,44 @@ export default async function GeorgiaPage() {
                   );
                 })}
               </div>
-              <div className="text-center">
+              <div className="flex flex-wrap justify-center gap-3 mb-3">
                 <Link
                   href="/calculator"
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition hover:scale-105"
+                  className="inline-flex items-center gap-2 px-5 py-3 rounded-xl font-semibold transition hover:scale-105"
                   style={{ background: "var(--dark)", color: "white" }}
                 >
-                  💰 Точный расчёт по дням и городам →
+                  💰 Расчёт по дням и городам
                 </Link>
+                <a
+                  href={`https://www.aviasales.ru/search/MOW${(() => { const d = new Date(); d.setDate(d.getDate() + 30); return String(d.getDate()).padStart(2, "0") + String(d.getMonth() + 1).padStart(2, "0"); })()}TBS1?marker=521784`}
+                  target="_blank"
+                  rel="noopener sponsored"
+                  className="inline-flex items-center gap-2 px-5 py-3 rounded-xl font-semibold transition hover:scale-105"
+                  style={{ background: "#FF6B1B", color: "white" }}
+                >
+                  🛫 Найти билеты
+                </a>
+                <a
+                  href="https://www.booking.com/searchresults.html?ss=Tbilisi%2C+Georgia"
+                  target="_blank"
+                  rel="noopener"
+                  className="inline-flex items-center gap-2 px-5 py-3 rounded-xl font-semibold transition hover:scale-105"
+                  style={{ background: "#003B95", color: "white" }}
+                >
+                  🏨 Найти отель
+                </a>
+                <a
+                  href="https://www.getyourguide.com/s/?q=Tbilisi"
+                  target="_blank"
+                  rel="noopener"
+                  className="inline-flex items-center gap-2 px-5 py-3 rounded-xl font-semibold transition hover:scale-105"
+                  style={{ background: "#F47B21", color: "white" }}
+                >
+                  🎫 Экскурсии
+                </a>
+              </div>
+              <div className="text-center text-xs text-gray-500">
+                Цифры выше — ориентир. По кнопкам реальные цены и бронирование на партнёрских сайтах.
               </div>
             </section>
           );
