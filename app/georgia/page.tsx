@@ -1,21 +1,9 @@
 import Link from "next/link";
 import Image from "next/image";
-import dynamic from "next/dynamic";
 import type { Metadata } from "next";
 import { getRoutes, getCities, getCityPOIs, getCityBudgets } from "@/lib/api";
 import type { CityInfo, RouteListItem, CityPOI, CityBudget } from "@/lib/types";
-
-const GeorgiaMap = dynamic(() => import("@/components/GeorgiaMap"), {
-  ssr: false,
-  loading: () => (
-    <div
-      style={{ height: "min(70vh, 560px)", minHeight: 360, background: "#F1ECDF" }}
-      className="w-full flex items-center justify-center text-gray-400 text-sm"
-    >
-      Загружаем карту…
-    </div>
-  ),
-});
+import GeorgiaMapClient from "@/components/GeorgiaMapClient";
 
 export const revalidate = 3600;
 
@@ -208,7 +196,7 @@ export default async function GeorgiaPage() {
 
       {/* MAP — country regions */}
       <section className="border-y" style={{ borderColor: "#E5E7EB" }}>
-        <GeorgiaMap />
+        <GeorgiaMapClient />
       </section>
 
       <main className="max-w-screen-xl mx-auto px-4 py-12">
