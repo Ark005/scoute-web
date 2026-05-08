@@ -66,8 +66,33 @@ export default async function GeorgiaPage() {
   const cities = allCities.filter((c) => georgianSet.has(c.slug));
   const routes = allRoutes.filter(isGeorgianRoute);
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "TouristDestination",
+    "name": "Грузия",
+    "description":
+      "Путеводитель по Грузии: Тбилиси, Кахетия, Сванетия, Казбеги. Авторские маршруты, города и сёла, гастрономия, вино, треккинг.",
+    "url": "https://scoute.app/georgia",
+    "touristType": ["Independent traveler", "Cultural tourism", "Gastronomy tourism", "Adventure tourism"],
+    "containsPlace": cities.map((c) => ({
+      "@type": "City",
+      "name": c.name,
+      "url": `https://scoute.app/cities/${c.slug}`,
+    })),
+    "subjectOf": routes.map((r) => ({
+      "@type": "TouristTrip",
+      "name": r.title,
+      "url": `https://scoute.app/routes/${r.slug}`,
+      "tripDuration": `P${r.duration_days}D`,
+    })),
+  };
+
   return (
     <main className="max-w-screen-xl mx-auto px-4 py-6">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* Hero */}
       <section className="mb-10">
         <div className="flex items-center gap-3 mb-3">
