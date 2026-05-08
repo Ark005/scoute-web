@@ -33,6 +33,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   return [
     { url: "https://scoute.app", changeFrequency: "weekly", priority: 1 },
+    { url: "https://scoute.app/georgia", changeFrequency: "weekly", priority: 0.95 },
     { url: "https://scoute.app/routes", changeFrequency: "weekly", priority: 0.9 },
     { url: "https://scoute.app/cities", changeFrequency: "weekly", priority: 0.9 },
     { url: "https://scoute.app/autopilot", changeFrequency: "monthly", priority: 0.7 },
