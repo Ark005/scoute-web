@@ -5,7 +5,49 @@ import { useRouter } from "next/navigation";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL || "https://scoute.app/api";
 
-type Message = { role: "user" | "assistant"; content: string };
+type Poi = {
+  id: number;
+  type: "attraction" | "restaurant";
+  name: string;
+  image_url: string;
+};
+
+type Message = {
+  role: "user" | "assistant";
+  content: string;
+  pois?: Poi[];
+  citySlug?: string;
+};
+
+// Russian keyword → city slug (включая регионы → центральный город региона)
+const CITY_KEYWORDS: Array<[RegExp, string]> = [
+  [/тбилис/i, "tbilisi"],
+  [/батум/i, "batumi"],
+  [/кутаис/i, "kutaisi"],
+  [/мцхет/i, "mtskheta"],
+  [/сигнах/i, "sighnaghi"],
+  [/телав/i, "telavi"],
+  [/казбег/i, "kazbegi"],
+  [/мести/i, "mestia"],
+  [/боржом/i, "borjomi"],
+  [/бакуриан/i, "bakuriani"],
+  [/гудаур/i, "gudauri"],
+  [/\bгори\b/i, "gori"],
+  [/сванет/i, "mestia"],
+  [/кахет/i, "telavi"],
+  [/аджари/i, "batumi"],
+  [/имерет/i, "kutaisi"],
+  [/хевсур/i, "khevsureti"],
+  [/тушет/i, "tusheti"],
+  [/рача/i, "racha"],
+];
+
+function detectCitySlug(text: string): string | null {
+  for (const [re, slug] of CITY_KEYWORDS) {
+    if (re.test(text)) return slug;
+  }
+  return null;
+}
 
 const STARTERS = [
   "Хочу 3 дня в Грузии — еда и вино",
@@ -110,28 +152,78 @@ export default function AIChat() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, building]);
 
+  async function fetchPois(slug: string): Promise<Poi[]> {
+    try {
+      const res = await fetch(`${BASE}/city-pois/?city=${slug}`);
+      if (!res.ok) return [];
+      const data = await res.json();
+      const atts: Poi[] = (data.attractions || [])
+        .filter((a: any) => a.image_url)
+        .slice(0, 3)
+        .map((a: any) => ({
+          id: a.id,
+          type: "attraction" as const,
+          name: a.name,
+          image_url: a.image_url,
+        }));
+      const rests: Poi[] = (data.restaurants || [])
+        .filter((r: any) => r.image_url)
+        .slice(0, 2)
+        .map((r: any) => ({
+          id: r.id,
+          type: "restaurant" as const,
+          name: r.name,
+          image_url: r.image_url,
+        }));
+      return [...atts, ...rests];
+    } catch {
+      return [];
+    }
+  }
+
   async function send(text: string) {
     if (!text.trim() || loading) return;
-    const next: Message[] = [...messages, { role: "user", content: text.trim() }];
+    const userText = text.trim();
+    const next: Message[] = [...messages, { role: "user", content: userText }];
     setMessages(next);
     setInput("");
     setLoading(true);
+
+    const citySlug = detectCitySlug(userText);
+    const poisPromise: Promise<Poi[]> = citySlug ? fetchPois(citySlug) : Promise.resolve([]);
+
     try {
-      const res = await fetch(`${BASE}/chat/`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: next }),
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      setMessages([...next, { role: "assistant", content: data.reply || "..." }]);
-    } catch (e) {
+      const [chatRes, pois] = await Promise.all([
+        fetch(`${BASE}/chat/`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ messages: next, city_slug: citySlug }),
+        }),
+        poisPromise,
+      ]);
+      const data = chatRes.ok ? await chatRes.json() : { reply: null };
+      const replyText =
+        data.reply ||
+        "Что-то с AI-сервисом сейчас. Попробуйте через минуту или соберите маршрут кнопкой ниже.";
+      setMessages([
+        ...next,
+        {
+          role: "assistant",
+          content: replyText,
+          pois: pois.length ? pois : undefined,
+          citySlug: citySlug || undefined,
+        },
+      ]);
+    } catch {
+      const pois = await poisPromise;
       setMessages([
         ...next,
         {
           role: "assistant",
           content:
-            "Что-то с AI-сервисом сейчас. Попробуйте через минуту или соберите маршрут вручную внизу.",
+            "Что-то с AI-сервисом сейчас. Попробуйте через минуту или соберите маршрут кнопкой ниже.",
+          pois: pois.length ? pois : undefined,
+          citySlug: citySlug || undefined,
         },
       ]);
     } finally {
@@ -196,20 +288,66 @@ export default function AIChat() {
         style={{ borderColor: "#E5E7EB", height: "min(60vh, 480px)" }}
       >
         {messages.map((m, i) => (
-          <div
-            key={i}
-            className={`mb-3 flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
-          >
-            <div
-              className="max-w-[85%] px-4 py-2 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap"
-              style={
-                m.role === "user"
-                  ? { background: "var(--blue)", color: "white" }
-                  : { background: "#F3F4F6", color: "var(--dark)" }
-              }
-            >
-              {m.content}
+          <div key={i} className="mb-3">
+            <div className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+              <div
+                className="max-w-[85%] px-4 py-2 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap"
+                style={
+                  m.role === "user"
+                    ? { background: "var(--blue)", color: "white" }
+                    : { background: "#F3F4F6", color: "var(--dark)" }
+                }
+              >
+                {m.content}
+              </div>
             </div>
+            {m.pois && m.pois.length > 0 && (
+              <div className="mt-3 -mx-2">
+                <div className="px-2 mb-2 text-xs uppercase tracking-wider text-gray-500">
+                  Места рядом
+                </div>
+                <div className="flex gap-2 overflow-x-auto px-2 pb-2 snap-x">
+                  {m.pois.map((p) => (
+                    <a
+                      key={`${p.type}-${p.id}`}
+                      href={`/poi/${p.type}/${p.id}`}
+                      className="shrink-0 w-32 snap-start group"
+                    >
+                      <div
+                        className="relative aspect-[3/4] rounded-xl overflow-hidden bg-gray-100"
+                        style={{ border: "1px solid #E5E7EB" }}
+                      >
+                        <img
+                          src={
+                            p.image_url.startsWith("http")
+                              ? p.image_url
+                              : `https://scoute.app${p.image_url}`
+                          }
+                          alt={p.name}
+                          loading="lazy"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                        <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/85 to-transparent" />
+                        <div className="absolute bottom-0 left-0 right-0 p-2 text-white">
+                          <div className="text-[11px] font-semibold leading-tight line-clamp-2">
+                            {p.name}
+                          </div>
+                        </div>
+                        <div
+                          className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider"
+                          style={{
+                            background: p.type === "restaurant" ? "#F97316" : "#3B82F6",
+                            color: "white",
+                          }}
+                        >
+                          {p.type === "restaurant" ? "🍽" : "📍"}
+                        </div>
+                      </div>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         ))}
         {loading && (
