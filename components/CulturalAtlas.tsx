@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 type Figure = {
+  key: string;
   name: string;
   years: string;
   role: string;
@@ -10,6 +11,7 @@ type Figure = {
 
 const FIGURES: Figure[] = [
   {
+    key: "pirosmani",
     name: "Нико Пиросмани",
     years: "1862—1918",
     role: "примитивист",
@@ -18,6 +20,7 @@ const FIGURES: Figure[] = [
     place: { label: "Тбилиси, духаны старого города", href: "/cities/tbilisi" },
   },
   {
+    key: "gabriadze",
     name: "Резо Габриадзе",
     years: "1936—2021",
     role: "сценарист, художник",
@@ -26,6 +29,7 @@ const FIGURES: Figure[] = [
     place: { label: "Театр марионеток, Тбилиси", href: "/cities/tbilisi" },
   },
   {
+    key: "paradjanov",
     name: "Сергей Параджанов",
     years: "1924—1990",
     role: "режиссёр",
@@ -34,6 +38,7 @@ const FIGURES: Figure[] = [
     place: { label: "Ул. Параджанова, 7", href: "/cities/tbilisi" },
   },
   {
+    key: "rustaveli",
     name: "Шота Руставели",
     years: "XII век",
     role: "поэт",
@@ -42,6 +47,7 @@ const FIGURES: Figure[] = [
     place: { label: "Проспект Руставели, Тбилиси", href: "/cities/tbilisi" },
   },
   {
+    key: "nino",
     name: "Святая Нино",
     years: "IV век",
     role: "крестительница Грузии",
@@ -50,6 +56,7 @@ const FIGURES: Figure[] = [
     place: { label: "Бодбе, Кахетия", href: "/cities/sighnaghi" },
   },
   {
+    key: "kikabidze",
     name: "Вахтанг Кикабидзе",
     years: "1938—2023",
     role: "актёр, певец",
@@ -58,6 +65,7 @@ const FIGURES: Figure[] = [
     place: { label: "Сигнахи (натура «Мимино»)", href: "/cities/sighnaghi" },
   },
   {
+    key: "tabidze",
     name: "Галактион Табидзе",
     years: "1892—1959",
     role: "поэт",
@@ -66,6 +74,7 @@ const FIGURES: Figure[] = [
     place: { label: "Тбилиси", href: "/cities/tbilisi" },
   },
   {
+    key: "david",
     name: "Давид IV Строитель",
     years: "1073—1125",
     role: "царь",
@@ -101,38 +110,49 @@ export default function CulturalAtlas() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {FIGURES.map((f) => (
           <article
-            key={f.name}
-            className="rounded-2xl p-6 transition hover:shadow-lg"
+            key={f.key}
+            className="rounded-2xl overflow-hidden flex transition hover:shadow-lg"
             style={{ background: "white", border: "1px solid #E5E7EB" }}
           >
-            <div className="flex items-baseline justify-between gap-3 mb-3">
-              <h3
-                className="font-extrabold leading-tight"
-                style={{
-                  fontFamily: 'Georgia, "Times New Roman", serif',
-                  fontSize: 22,
-                  color: "var(--dark)",
-                }}
-              >
-                {f.name}
-              </h3>
-              <div className="text-xs text-gray-400 whitespace-nowrap shrink-0">
-                {f.years}
+            <div className="shrink-0 w-32 sm:w-40 relative" style={{ background: "#FAFAF7" }}>
+              <img
+                src={`/culture/${f.key}.png`}
+                alt={f.name}
+                loading="lazy"
+                className="w-full h-full object-cover"
+                style={{ minHeight: 220 }}
+              />
+            </div>
+            <div className="flex-1 p-5 min-w-0">
+              <div className="flex items-baseline justify-between gap-3 mb-2">
+                <h3
+                  className="font-extrabold leading-tight"
+                  style={{
+                    fontFamily: 'Georgia, "Times New Roman", serif',
+                    fontSize: 20,
+                    color: "var(--dark)",
+                  }}
+                >
+                  {f.name}
+                </h3>
+                <div className="text-xs text-gray-400 whitespace-nowrap shrink-0">
+                  {f.years}
+                </div>
               </div>
+              <div className="text-xs uppercase tracking-wider text-gray-500 mb-3">
+                {f.role}
+              </div>
+              <p className="text-sm text-gray-700 leading-relaxed mb-4">
+                {f.story}
+              </p>
+              <Link
+                href={f.place.href}
+                className="inline-flex items-center gap-1.5 text-xs font-semibold transition hover:gap-2.5"
+                style={{ color: "var(--blue)" }}
+              >
+                ↗ {f.place.label}
+              </Link>
             </div>
-            <div className="text-xs uppercase tracking-wider text-gray-500 mb-3">
-              {f.role}
-            </div>
-            <p className="text-sm text-gray-700 leading-relaxed mb-4">
-              {f.story}
-            </p>
-            <Link
-              href={f.place.href}
-              className="inline-flex items-center gap-1.5 text-xs font-semibold transition hover:gap-2.5"
-              style={{ color: "var(--blue)" }}
-            >
-              ↗ {f.place.label}
-            </Link>
           </article>
         ))}
       </div>
