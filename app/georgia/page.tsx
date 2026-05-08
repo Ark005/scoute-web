@@ -67,14 +67,53 @@ function absUrl(url: string | null | undefined): string {
   return url;
 }
 
+// POI с такими названиями встречаются как дубли в нескольких городах — не использовать как hero.
+const ALIEN_POI_PATTERNS = [
+  /варзия/i, /вардзи/i, /уплисци/i, /самеба/i, /светицховели/i, /гелати/i, /баграти/i,
+];
+
+// Город → подсказка какой POI взять как hero (по подстроке имени)
+const CITY_PREFERRED_HERO: Record<string, RegExp[]> = {
+  kutaisi: [/баграт/i, /гелати/i, /колхет/i, /кутаис/i],
+  borjomi: [/боржоми/i, /парк/i, /романо/i, /харагаул/i],
+  mtskheta: [/светицховел/i, /джвари/i, /мцхет/i],
+  sighnaghi: [/сигнах/i, /бодбе/i, /давид/i],
+  telavi: [/алаверд/i, /телав/i, /икалто/i, /цинандал/i],
+  gori: [/уплисци/i, /гори/i, /сталин/i],
+  bakuriani: [/бакуриан/i, /трасс/i, /склон/i],
+  gudauri: [/гудаур/i, /крест/i, /арка/i],
+  kazbegi: [/гергет/i, /казбек/i, /казбеги/i, /степанцм/i],
+  mestia: [/местиа/i, /мест/i, /сван/i, /ушгул/i, /уш/i],
+  javakheti: [/паравани/i, /карцах/i, /сагамо/i, /джавахет/i],
+  racha: [/шови/i, /рача/i, /уцера/i, /амбролаур/i],
+  chiatura: [/чиатур/i, /канатн/i],
+  khevsureti: [/шатил/i, /хевсур/i],
+  tusheti: [/тушет/i, /омало/i, /дикло/i],
+  tbilisi: [/самеба/i, /нарикал/i, /цминд/i, /метех/i],
+  batumi: [/набережн/i, /али и нино/i, /пьяцца/i, /ботанич/i, /батум/i],
+};
+
 async function getCityHero(slug: string): Promise<{ name: string; image: string; pois_count: number } | null> {
   try {
     const data = await getCityPOIs(slug);
-    const poi = data.attractions.find((a: CityPOI) => a.image_url) || data.attractions[0];
-    if (!poi) return null;
+    const all = data.attractions.filter((a: CityPOI) => a.image_url);
+    if (all.length === 0) return null;
+
+    const preferred = CITY_PREFERRED_HERO[slug] || [];
+    // Кандидат по подсказке
+    let pick: CityPOI | undefined;
+    for (const re of preferred) {
+      pick = all.find((a) => re.test(a.name));
+      if (pick) break;
+    }
+    // Иначе — первый POI чьё имя НЕ совпадает с known-чужой (Вардзия/Самеба и т.п. — общеизвестные landmarks
+    // которые попадают в несколько городов как дубли в БД).
+    if (!pick) {
+      pick = all.find((a) => !ALIEN_POI_PATTERNS.some((re) => re.test(a.name))) || all[0];
+    }
     return {
-      name: poi.name,
-      image: absUrl(poi.image_url),
+      name: pick.name,
+      image: absUrl(pick.image_url),
       pois_count: data.attractions.length + data.restaurants.length,
     };
   } catch {
@@ -262,7 +301,7 @@ export default async function GeorgiaPage() {
                   className="group block rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-xl transition-all"
                   style={{ border: "1px solid #E5E7EB" }}
                 >
-                  <div className="relative aspect-[4/3] bg-gray-100 overflow-hidden">
+                  <div className="relative aspect-[3/4] bg-gray-100 overflow-hidden">
                     {c.hero?.image ? (
                       <Image
                         src={c.hero.image}
@@ -276,26 +315,18 @@ export default async function GeorgiaPage() {
                         🏔
                       </div>
                     )}
-                    <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/70 to-transparent" />
+                    <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
                     <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
                       <div
-                        className="font-bold text-xl leading-tight"
+                        className="font-bold text-2xl leading-tight mb-1"
                         style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
                       >
                         {c.name}
                       </div>
+                      <div className="text-xs text-white/80">
+                        {c.hero?.pois_count ?? 0} мест и заведений
+                      </div>
                     </div>
-                  </div>
-                  <div className="px-4 py-3 flex items-center justify-between text-xs text-gray-500">
-                    <span>
-                      {c.attractions_count || 0} мест · {c.restaurants_count || 0} рест.
-                    </span>
-                    <span
-                      className="font-semibold opacity-0 group-hover:opacity-100 transition-opacity"
-                      style={{ color: "var(--blue)" }}
-                    >
-                      Открыть →
-                    </span>
                   </div>
                 </Link>
               ))}
@@ -333,7 +364,7 @@ export default async function GeorgiaPage() {
                   className="group block rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-xl transition-all"
                   style={{ border: "1px solid #E5E7EB" }}
                 >
-                  <div className="relative aspect-[16/9] bg-gray-100 overflow-hidden">
+                  <div className="relative aspect-[4/5] bg-gray-100 overflow-hidden">
                     {r.cover_image ? (
                       <Image
                         src={r.cover_image}
