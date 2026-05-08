@@ -4,7 +4,7 @@ import NavBar from "@/components/NavBar";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://scoute.app"),
-  title: "Scout·E — Маршруты по России",
+  title: "Scoute — Маршруты по России",
   description:
     "Авторские автомаршруты и городские гиды по городам России. Планируй путешествие с картой и оптимизацией маршрута.",
 };

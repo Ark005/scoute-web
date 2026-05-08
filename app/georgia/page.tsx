@@ -8,7 +8,7 @@ import GeorgiaMapClient from "@/components/GeorgiaMapClient";
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: "Грузия — путеводитель и маршруты | Scout·E",
+  title: "Грузия — путеводитель и маршруты | Scoute",
   description:
     "Гид по Грузии: Тбилиси, Батуми, Кахетия, Сванетия, Казбеги. Авторские маршруты, города и сёла, гастрономия, вино, треккинг. Собери свой маршрут с AI.",
   keywords: [
@@ -149,8 +149,9 @@ export default async function GeorgiaPage() {
         />
         <div className="absolute inset-0 flex flex-col justify-end">
           <div className="max-w-screen-xl mx-auto w-full px-4 pb-10 md:pb-16">
-            <div className="text-white/80 text-xs md:text-sm uppercase tracking-[0.2em] mb-3">
-              Гид Scout · Спецпроект
+            <div className="text-white/80 text-xs md:text-sm uppercase tracking-[0.2em] mb-3 flex items-center gap-3">
+              <span className="text-2xl md:text-3xl">🇬🇪</span>
+              <span>Гид Scoute · Спецпроект</span>
             </div>
             <h1
               className="text-white font-extrabold leading-[0.95] mb-4"
@@ -454,7 +455,7 @@ export default async function GeorgiaPage() {
             },
             {
               level: "mid" as const,
-              label: "Средне",
+              label: "Достойно",
               hint: "3-4★ отель, рестораны, такси Bolt",
               hotel: hp((tbilisiBudget.hotel as any).mid),
               meal: hp((tbilisiBudget.meal as any).mid),
@@ -473,7 +474,7 @@ export default async function GeorgiaPage() {
             <section className="mb-20">
               <div className="mb-8">
                 <div className="text-xs uppercase tracking-[0.2em] text-gray-500 mb-2">
-                  Бюджет
+                  Цена вопроса
                 </div>
                 <h2
                   className="font-extrabold mb-3"
@@ -483,7 +484,7 @@ export default async function GeorgiaPage() {
                     color: "var(--dark)",
                   }}
                 >
-                  Сколько стоит Грузия
+                  Во сколько обойдётся Грузия
                 </h2>
                 <p className="text-gray-600 max-w-2xl leading-relaxed">
                   Реальные цены по Тбилиси, на человека в день. Без перелёта.

@@ -152,6 +152,13 @@ export default function GeorgiaMap() {
 
   return (
     <div className="relative w-full" style={{ height: "min(70vh, 560px)", minHeight: 360 }}>
+      {/* Smooth hover transitions for region polygons */}
+      <style>{`
+        .leaflet-overlay-pane svg path.leaflet-interactive {
+          transition: fill-opacity 0.35s ease-out, stroke-width 0.35s ease-out, stroke-opacity 0.35s ease-out, fill 0.35s ease-out;
+          cursor: pointer;
+        }
+      `}</style>
       <MapContainer
         bounds={GEORGIA_BOUNDS}
         boundsOptions={{ padding: [20, 20] }}
@@ -183,10 +190,21 @@ export default function GeorgiaMap() {
                 });
               }
               layer.on("mouseover", function (e: any) {
-                e.target.setStyle({ fillOpacity: 0.45, weight: 2 });
+                e.target.setStyle({
+                  fillOpacity: 0.6,
+                  weight: 2.5,
+                  color: "#7C2D12",
+                  fillColor: "#FBBF24",
+                });
+                if (e.target.bringToFront) e.target.bringToFront();
               });
               layer.on("mouseout", function (e: any) {
-                e.target.setStyle({ fillOpacity: 0.18, weight: 1.2 });
+                e.target.setStyle({
+                  fillOpacity: 0.18,
+                  weight: 1.2,
+                  color: "#92400e",
+                  fillColor: "#FEF3C7",
+                });
               });
             }}
           />

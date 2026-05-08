@@ -54,8 +54,8 @@ export async function generateMetadata({
 
   const title =
     type === "attraction"
-      ? `${poi.name} — достопримечательность | Scout·E`
-      : `${poi.name} — ресторан | Scout·E`;
+      ? `${poi.name} — достопримечательность | Scoute`
+      : `${poi.name} — ресторан | Scoute`;
 
   const description = poi.description
     ? poi.description.slice(0, 160)

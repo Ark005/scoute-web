@@ -43,7 +43,7 @@ export async function generateMetadata({
   const { id } = await params;
   const trip = await getTrip(id);
   return {
-    title: trip ? `${trip.title} | Scout·E` : "Программа поездки | Scout·E",
+    title: trip ? `${trip.title} | Scoute` : "Программа поездки | Scoute",
     description: trip
       ? `Программа поездки: ${trip.title}. Откройте в приложении или продолжайте планировать.`
       : "Программа поездки",
@@ -180,7 +180,7 @@ export default async function TripPage({
             className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition hover:opacity-90"
             style={{ background: "white", color: "var(--dark)" }}
           >
-            Открыть в Scout·E
+            Открыть в Scoute
           </a>
           <button
             disabled

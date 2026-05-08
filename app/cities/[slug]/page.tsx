@@ -31,7 +31,7 @@ export async function generateMetadata({
   const name = city?.name || slug;
   const teaser = city?.teaser || `Городской гид по ${name}`;
   return {
-    title: `${name} — городской гид | Scout·E`,
+    title: `${name} — городской гид | Scoute`,
     description: teaser,
   };
 }

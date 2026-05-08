@@ -29,7 +29,7 @@ export default function NavBar() {
           href="/"
           className="font-bold text-white text-lg tracking-tight hover:opacity-90 transition"
         >
-          Scout·E
+          Scoute
         </Link>
 
         {/* Desktop nav */}

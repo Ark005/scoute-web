@@ -3,7 +3,7 @@ import TripCalculator from "@/components/TripCalculator";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Калькулятор поездки — Scout·E",
+  title: "Калькулятор поездки — Scoute",
   description:
     "Рассчитайте бюджет поездки в Грузию: отели, еда, транспорт, перелёт. Средние цены по городам.",
 };

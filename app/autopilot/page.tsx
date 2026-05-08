@@ -2,7 +2,7 @@ import AIChat from "@/components/AIChat";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "AI-планировщик маршрутов | Scout·E",
+  title: "AI-планировщик маршрутов | Scoute",
   description:
     "Расскажите AI-помощнику что хотите от поездки — он соберёт маршрут под ваши даты, бюджет и темп. Сохраните и откройте в приложении в поездке.",
 };
