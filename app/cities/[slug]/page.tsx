@@ -3,7 +3,15 @@ import { getCities, getCityPOIs, getCityPOIsFromAPI, getCityWeather } from "@/li
 import { CityPOI, CityWeather } from "@/lib/types";
 import { notFound } from "next/navigation";
 import CityGuide from "@/components/CityGuide";
+import CityExplorer from "@/components/CityExplorer";
 import type { Metadata } from "next";
+
+// Города для которых используем новый Flutter-style explorer
+const FLUTTER_STYLE_CITIES = new Set([
+  "tbilisi", "batumi", "kutaisi", "mtskheta", "sighnaghi", "telavi", "kazbegi",
+  "mestia", "borjomi", "bakuriani", "gudauri", "gori", "khevsureti", "tusheti",
+  "racha", "chiatura", "javakheti",
+]);
 
 export const revalidate = 3600;
 
@@ -84,6 +92,12 @@ export default async function CityPage({
     weather = await getCityWeather(slug);
   } catch {
     // weather is optional
+  }
+
+  // Грузинские города → новый Flutter-style explorer (3 таба + planner)
+  if (FLUTTER_STYLE_CITIES.has(slug) && pois.length > 0) {
+    const ruName = (CITIES.find((c) => c.slug === slug)?.name) || cityData.name;
+    return <CityExplorer citySlug={slug} cityName={ruName} pois={pois} />;
   }
 
   return <CityGuide city={cityData} pois={pois} error={error} weather={weather} />;
