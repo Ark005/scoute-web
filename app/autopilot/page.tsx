@@ -32,7 +32,7 @@ async function getGeorgianRestaurants() {
     GEORGIA_CITIES_FOR_RESTAURANTS.map(async (c) => {
       try {
         const r = await fetch(
-          `http://127.0.0.1:8000/api/city-pois/?city=${c.slug}`,
+          `https://scoute.app/api/city-pois/?city=${c.slug}`,
           { headers, next: { revalidate: 3600 } },
         );
         if (!r.ok) return [];
@@ -65,7 +65,7 @@ async function getGeorgianRestaurants() {
 async function getTbilisiEvents() {
   try {
     const r = await fetch(
-      "http://127.0.0.1:8000/api/events/tbilisi/",
+      "https://scoute.app/api/events/tbilisi/",
       {
         headers: {
           "User-Agent": "ScouteSSR/1.0",

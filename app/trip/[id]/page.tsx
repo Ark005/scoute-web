@@ -3,8 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 
-// Server-side: bypass nginx (которое режет UA), идём напрямую в Django.
-const BASE = process.env.SCOUT_INTERNAL_API_URL || "http://127.0.0.1:8000/api";
+const BASE = process.env.NEXT_PUBLIC_API_URL || "https://scoute.app/api";
 
 type TripData = {
   id: string;
