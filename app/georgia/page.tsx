@@ -417,7 +417,7 @@ export default async function GeorgiaPage() {
                   <div className="relative aspect-[4/5] bg-gray-100 overflow-hidden">
                     {r.cover_image ? (
                       <Image
-                        src={r.cover_image}
+                        src={absUrl(r.cover_image)}
                         alt={r.title}
                         fill
                         sizes="(max-width: 768px) 100vw, 50vw"
