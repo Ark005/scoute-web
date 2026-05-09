@@ -23,7 +23,7 @@ const ADVERTISER_NAME = "Go Travel Un Limited";
 
 export default function AffiliateDisclaimer({
   erid,
-  variant = "compact",
+  variant = "full",
   color = "#9CA3AF",
 }: Props) {
   const text =
