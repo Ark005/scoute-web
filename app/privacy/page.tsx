@@ -129,8 +129,8 @@ export default function PrivacyPage() {
           </ul>
           <p className="mt-2">
             Связаться:{" "}
-            <a href="mailto:hello@scoute.app" className="underline" style={{ color: "var(--blue)" }}>
-              hello@scoute.app
+            <a href="mailto:005ark@gmail.com?subject=Scoute%20—%20персональные%20данные" className="underline" style={{ color: "var(--blue)" }}>
+              005ark@gmail.com
             </a>
             . Ответ в течение 30 дней.
           </p>
