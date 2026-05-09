@@ -2,7 +2,10 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { CityPOI } from "@/lib/types";
+import AddToTripButton from "@/components/AddToTripButton";
+import { addToTripDraft } from "@/lib/tripDraft";
 
 type Props = {
   citySlug: string;
@@ -104,6 +107,7 @@ function absUrl(u?: string): string {
 }
 
 export default function CityExplorer({ citySlug, cityName, pois, events = [] }: Props) {
+  const router = useRouter();
   const [tab, setTab] = useState<Tab>("combined");
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
@@ -194,6 +198,23 @@ export default function CityExplorer({ citySlug, cityName, pois, events = [] }: 
       return;
     }
     setDays((d) => d.map((x, i) => (i === activeDayIdx ? { ...x, pois: [...x.pois, p] } : x)));
+  }
+
+  function saveAsDraft() {
+    let count = 0;
+    for (const d of days) {
+      for (const p of d.pois) {
+        addToTripDraft({
+          kind: "poi",
+          id: p.id,
+          name: p.name,
+          city_slug: citySlug,
+          image_url: p.image_url ?? null,
+        });
+        count++;
+      }
+    }
+    if (count > 0) router.push("/trip/draft");
   }
 
   function autofill() {
@@ -499,11 +520,8 @@ export default function CityExplorer({ citySlug, cityName, pois, events = [] }: 
                       const date = formatDate(e.event_date);
                       const t = EVENT_TYPE_LABEL[e.event_type] || EVENT_TYPE_LABEL.other;
                       return (
-                        <a
+                        <div
                           key={e.id}
-                          href={e.ticket_url || `/poi/attraction/${e.id}`}
-                          target={e.ticket_url ? "_blank" : undefined}
-                          rel={e.ticket_url ? "noopener" : undefined}
                           className="group flex gap-2 rounded-2xl overflow-hidden bg-white transition hover:shadow-lg"
                           style={{ border: "1px solid #E5E7EB" }}
                         >
@@ -530,7 +548,7 @@ export default function CityExplorer({ citySlug, cityName, pois, events = [] }: 
                               </div>
                             </div>
                           )}
-                          <div className="flex-1 min-w-0 py-2 pr-2">
+                          <div className="flex-1 min-w-0 py-2 pr-2 flex flex-col">
                             <div
                               className="text-[10px] font-bold uppercase tracking-wider mb-1"
                               style={{ color: t.color }}
@@ -538,10 +556,35 @@ export default function CityExplorer({ citySlug, cityName, pois, events = [] }: 
                               {t.emoji} {t.label}
                             </div>
                             <div
-                              className="font-bold text-xs leading-tight line-clamp-2"
+                              className="font-bold text-xs leading-tight line-clamp-2 mb-1.5"
                               style={{ color: "#0F172A" }}
                             >
                               {e.name}
+                            </div>
+                            <div className="mt-auto flex flex-wrap items-center gap-1">
+                              <AddToTripButton
+                                item={{
+                                  kind: "event",
+                                  id: e.id,
+                                  name: e.name,
+                                  event_date: e.event_date,
+                                  event_time: e.event_time,
+                                  event_type: e.event_type,
+                                  image_url: e.image_url,
+                                  ticket_url: e.ticket_url,
+                                }}
+                              />
+                              {e.ticket_url && (
+                                <a
+                                  href={e.ticket_url}
+                                  target="_blank"
+                                  rel="noopener"
+                                  className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider transition hover:opacity-80"
+                                  style={{ background: "#F3F4F6", color: "#0F172A" }}
+                                >
+                                  Билет ↗
+                                </a>
+                              )}
                             </div>
                           </div>
                           {e.image_url && (
@@ -554,7 +597,7 @@ export default function CityExplorer({ citySlug, cityName, pois, events = [] }: 
                               />
                             </div>
                           )}
-                        </a>
+                        </div>
                       );
                     })}
                   </div>
@@ -586,6 +629,15 @@ export default function CityExplorer({ citySlug, cityName, pois, events = [] }: 
                   style={{ background: "#FF6B1B" }}
                 >
                   ✨ Автозаполнение
+                </button>
+                <button
+                  onClick={saveAsDraft}
+                  disabled={placedIds.size === 0}
+                  className="px-3 py-1.5 rounded-lg text-xs font-bold text-white disabled:opacity-40"
+                  style={{ background: "var(--blue, #2563EB)" }}
+                  title="Сохранить как черновик маршрута"
+                >
+                  💾 В маршрут ({placedIds.size})
                 </button>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

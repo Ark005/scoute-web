@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import Logo from "./Logo";
+import TripDraftBadge from "./TripDraftBadge";
 
 const NAV_LINKS = [
   { href: "/georgia", label: "Грузия" },
@@ -52,6 +53,7 @@ export default function NavBar() {
 
         {/* Right cluster: mic + CTA */}
         <div className="hidden md:flex items-center gap-3 shrink-0">
+          <TripDraftBadge />
           <Link
             href="/autopilot?voice=1"
             aria-label="Голосовой ввод"

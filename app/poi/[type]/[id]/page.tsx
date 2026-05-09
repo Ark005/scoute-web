@@ -3,6 +3,7 @@ import { getCities, getCityPOIsFromAPI } from "@/lib/api";
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
+import AddToTripButton from "@/components/AddToTripButton";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://scoute.app/api";
 const isLocal = BASE_URL.includes("localhost") || BASE_URL.includes("127.0.0.1");
@@ -164,7 +165,20 @@ export default async function POIPage({
         </div>
       )}
 
-      <h1 className="text-3xl font-bold mb-2">{poi.name}</h1>
+      <div className="flex items-start justify-between gap-3 mb-2">
+        <h1 className="text-3xl font-bold">{poi.name}</h1>
+        <AddToTripButton
+          item={{
+            kind: "poi",
+            id: poi.id,
+            name: poi.name,
+            city_slug: poi.city_slug ?? null,
+            image_url: poi.image_url ?? null,
+          }}
+          variant="full"
+          className="shrink-0 mt-1.5"
+        />
+      </div>
 
       <div className="flex flex-wrap gap-2 mb-4 text-sm">
         <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full">
