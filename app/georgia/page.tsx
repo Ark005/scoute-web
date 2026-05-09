@@ -5,6 +5,8 @@ import { getRoutes, getCities, getCityPOIs, getCityBudgets } from "@/lib/api";
 import type { CityInfo, RouteListItem, CityPOI, CityBudget } from "@/lib/types";
 import { aviasalesUrl } from "@/lib/transport";
 import GeorgiaMapClient from "@/components/GeorgiaMapClient";
+import AffiliateDisclaimer from "@/components/AffiliateDisclaimer";
+import EventsCalendar from "@/components/EventsCalendar";
 
 export const revalidate = 3600;
 
@@ -113,8 +115,25 @@ const CITY_PREFERRED_HERO: Record<string, RegExp[]> = {
   khevsureti: [/шатил/i, /хевсур/i],
   tusheti: [/тушет/i, /омало/i, /дикло/i],
   tbilisi: [/самеба/i, /нарикал/i, /цминд/i, /метех/i],
-  batumi: [/набережн/i, /али и нино/i, /пьяцца/i, /ботанич/i, /батум/i],
+  batumi: [/набережн/i, /пьяцца/i, /ботанич/i, /бульвар/i, /колоннад/i, /статуя.*али/i, /^батум/i],
 };
+
+async function getTbilisiEvents() {
+  try {
+    const r = await fetch("https://scoute.app/api/events/tbilisi/", {
+      headers: {
+        "User-Agent": "ScouteSSR/1.0",
+        "Authorization": "Basic c2NvdXQ6U2NvdXQyMDI2IQ==",
+      },
+      next: { revalidate: 3600 },
+    });
+    if (!r.ok) return [];
+    const d = await r.json();
+    return d.events || [];
+  } catch {
+    return [];
+  }
+}
 
 async function getCityHero(slug: string): Promise<{ name: string; image: string; pois_count: number } | null> {
   try {
@@ -145,10 +164,11 @@ async function getCityHero(slug: string): Promise<{ name: string; image: string;
 }
 
 export default async function GeorgiaPage() {
-  const [allCities, allRoutes, allBudgets] = await Promise.all([
+  const [allCities, allRoutes, allBudgets, events] = await Promise.all([
     getCities().catch(() => [] as CityInfo[]),
     getRoutes().catch(() => [] as RouteListItem[]),
     getCityBudgets().catch(() => [] as CityBudget[]),
+    getTbilisiEvents(),
   ]);
 
   const georgianSet = new Set(GEORGIA_CITY_SLUGS);
@@ -344,7 +364,7 @@ export default async function GeorgiaPage() {
                         className="font-bold text-2xl leading-tight mb-1"
                         style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
                       >
-                        {c.name}
+                        {CITY_DISPLAY_NAMES[c.slug] || c.name}
                       </div>
                       <div className="text-xs text-white/80">
                         {c.hero?.pois_count ?? 0} мест и заведений
@@ -356,6 +376,13 @@ export default async function GeorgiaPage() {
             </div>
           )}
         </section>
+
+        {/* Events */}
+        {events.length > 0 && (
+          <section className="mb-20">
+            <EventsCalendar events={events} />
+          </section>
+        )}
 
         {/* Routes */}
         {routes.length > 0 && (
@@ -607,15 +634,18 @@ export default async function GeorgiaPage() {
                 >
                   💰 Расчёт по дням и городам
                 </Link>
-                <a
-                  href={aviasalesUrl("TBS")}
-                  target="_blank"
-                  rel="noopener sponsored"
-                  className="inline-flex items-center gap-2 px-5 py-3 rounded-xl font-semibold transition hover:scale-105"
-                  style={{ background: "#FF6B1B", color: "white" }}
-                >
-                  🛫 Найти билеты
-                </a>
+                <div className="flex flex-col items-stretch">
+                  <a
+                    href={aviasalesUrl("TBS")}
+                    target="_blank"
+                    rel="noopener sponsored"
+                    className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold transition hover:scale-105"
+                    style={{ background: "#FF6B1B", color: "white" }}
+                  >
+                    🛫 Найти билеты
+                  </a>
+                  <AffiliateDisclaimer />
+                </div>
                 <a
                   href="https://www.booking.com/searchresults.html?ss=Tbilisi%2C+Georgia"
                   target="_blank"

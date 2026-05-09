@@ -3,6 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import TripTimeline from "@/components/TripTimeline";
+import EventsCalendar from "@/components/EventsCalendar";
+import AffiliateDisclaimer from "@/components/AffiliateDisclaimer";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL || "https://scoute.app/api";
 
@@ -50,6 +52,46 @@ export async function generateMetadata({
       : "Программа поездки",
     robots: "noindex, nofollow",
   };
+}
+
+async function getEventsForCountry(countrySlug: string): Promise<any[]> {
+  // События пока есть только для Тбилиси (Грузия). Для остальных — пусто.
+  if (countrySlug !== "georgia") return [];
+  try {
+    const headers: Record<string, string> = {
+      "User-Agent": "ScouteSSR/1.0",
+      "Referer": "https://scoute.app",
+    };
+    const isLocal = BASE.includes("localhost") || BASE.includes("127.0.0.1");
+    if (!isLocal) {
+      headers["Authorization"] = "Basic c2NvdXQ6U2NvdXQyMDI2IQ==";
+    }
+    const r = await fetch(`${BASE}/events/tbilisi/`, { headers, next: { revalidate: 3600 } });
+    if (!r.ok) return [];
+    const d = await r.json();
+    return d.events || [];
+  } catch {
+    return [];
+  }
+}
+
+function getTripDateRange(trip: TripData): { from: string | null; to: string | null } {
+  const meta = trip.meta || {};
+  const start =
+    meta.start_date || meta.date_from || (trip.program && (trip.program as any).start_date) || null;
+  const end =
+    meta.end_date || meta.date_to || (trip.program && (trip.program as any).end_date) || null;
+  if (start && end) return { from: start, to: end };
+  // Если есть только start + days — считаем end
+  const days = meta.days || (trip.program && (trip.program as any).days_count);
+  if (start && typeof days === "number" && days > 0) {
+    const d = new Date(start + "T00:00:00");
+    if (!isNaN(d.getTime())) {
+      d.setDate(d.getDate() + days - 1);
+      return { from: start, to: d.toISOString().slice(0, 10) };
+    }
+  }
+  return { from: null, to: null };
 }
 
 function getDays(program: any): any[] {
@@ -139,6 +181,8 @@ export default async function TripPage({
   if (!trip) notFound();
 
   const days = getDays(trip.program);
+  const events = await getEventsForCountry(trip.country_slug);
+  const tripDates = getTripDateRange(trip);
 
   // Альтернативы для swap — раздельно: attractions и restaurants
   let attractionAlts: any[] = [];
@@ -247,21 +291,40 @@ export default async function TripPage({
         </div>
       )}
 
+      {/* Events for trip dates */}
+      {events.length > 0 && (
+        <EventsCalendar
+          events={events}
+          title={tripDates.from ? "Что в эти дни в Тбилиси" : "Афиша Тбилиси"}
+          subtitle={
+            tripDates.from
+              ? "Концерты, спектакли, фестивали — добавьте в маршрут одной кнопкой."
+              : "Концерты, спектакли, фестивали. Добавьте в маршрут одной кнопкой."
+          }
+          dateFrom={tripDates.from}
+          dateTo={tripDates.to}
+          limit={tripDates.from ? 24 : 8}
+        />
+      )}
+
       {/* Buy CTAs */}
       <div className="my-8">
         <h3 className="text-lg font-extrabold mb-3" style={{ color: "var(--dark)" }}>
           Купить
         </h3>
         <div className="flex flex-wrap gap-3">
-          <a
-            href={`https://www.aviasales.ru/search/MOW${(() => { const d = new Date(); d.setDate(d.getDate() + 30); return String(d.getDate()).padStart(2, "0") + String(d.getMonth() + 1).padStart(2, "0"); })()}TBS1?marker=521784`}
-            target="_blank"
-            rel="noopener sponsored"
-            className="inline-flex items-center gap-2 px-5 py-3 rounded-xl font-semibold text-white transition hover:scale-105"
-            style={{ background: "#FF6B1B" }}
-          >
-            🛫 Билеты в Грузию
-          </a>
+          <div className="flex flex-col items-stretch">
+            <a
+              href={`https://www.aviasales.ru/search/MOW${(() => { const d = new Date(); d.setDate(d.getDate() + 30); return String(d.getDate()).padStart(2, "0") + String(d.getMonth() + 1).padStart(2, "0"); })()}TBS1?marker=521784`}
+              target="_blank"
+              rel="noopener sponsored"
+              className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold text-white transition hover:scale-105"
+              style={{ background: "#FF6B1B" }}
+            >
+              🛫 Билеты в Грузию
+            </a>
+            <AffiliateDisclaimer />
+          </div>
           <a
             href={`https://www.booking.com/searchresults.html?ss=${encodeURIComponent(trip.city_slug || "Tbilisi")}%2C+Georgia`}
             target="_blank"
