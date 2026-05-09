@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import TripTimeline from "@/components/TripTimeline";
 import EventsCalendar from "@/components/EventsCalendar";
 import AffiliateDisclaimer from "@/components/AffiliateDisclaimer";
+import TourBlock from "@/components/TourBlock";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL || "https://scoute.app/api";
 
@@ -337,20 +338,11 @@ export default async function TripPage({
             </a>
             <AffiliateDisclaimer />
           </div>
-          <div className="flex flex-col items-stretch">
-            <a
-              href={`https://www.getyourguide.com/s/?q=${encodeURIComponent(trip.city_slug || "Tbilisi")}`}
-              target="_blank"
-              rel="noopener sponsored"
-              className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold text-white transition hover:scale-105"
-              style={{ background: "#F47B21" }}
-            >
-              🎫 Экскурсии
-            </a>
-            <AffiliateDisclaimer />
-          </div>
         </div>
       </div>
+
+      {/* Туры-партнёры под город — конкретные экскурсии вместо общего поиска GYG */}
+      {trip.city_slug && <TourBlock citySlug={trip.city_slug} />}
 
       {/* Share */}
       <div

@@ -130,6 +130,23 @@ export interface TripBreakdown {
   total: number;
 }
 
+export interface Tour {
+  id: number;
+  name: string;
+  name_en: string;
+  description: string;
+  city_slug: string;
+  category: string;
+  image_url: string;
+  price_usd: number | null;
+  duration_hours: number | null;
+  rating: number;
+  review_count: number;
+  provider: string;
+  provider_tour_id: string;
+  affiliate_url: string;
+}
+
 export interface CityPOI {
   id: number;
   type: "attraction" | "restaurant";

@@ -1,4 +1,4 @@
-import { RouteListItem, RouteDetail, CityPOI, CityWeather, CityInfo, CityBudget, TripBreakdown } from "./types";
+import { RouteListItem, RouteDetail, CityPOI, CityWeather, CityInfo, CityBudget, TripBreakdown, Tour } from "./types";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL || "https://scoute.app/api";
 const isLocal = BASE.includes("localhost") || BASE.includes("127.0.0.1");
@@ -53,6 +53,17 @@ export async function getCityBudget(slug: string): Promise<CityBudget> {
 
 export async function getFlightPrice(destination: string, origin = "MOW"): Promise<{ price_rub: number | null; price_usd: number | null }> {
   return get<{ price_rub: number | null; price_usd: number | null }>(`/flight-price/?origin=${origin}&destination=${destination}`);
+}
+
+export async function getTours(citySlug: string, category?: string): Promise<Tour[]> {
+  const qs = new URLSearchParams({ city: citySlug });
+  if (category) qs.set("category", category);
+  try {
+    const data = await get<{ tours: Tour[]; count: number }>(`/tours/?${qs.toString()}`);
+    return data.tours || [];
+  } catch {
+    return [];
+  }
 }
 
 export async function getCityPOIsFromAPI(slug: string): Promise<{
