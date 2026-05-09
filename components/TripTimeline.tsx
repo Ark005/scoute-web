@@ -23,7 +23,9 @@ type Props = {
   tripId: string;
   citySlug: string | null;
   days: Day[];
-  alternativesByCity?: Record<string, Slot[]>;
+  /** Альтернативы для замены — раздельно: достопримечательности и рестораны. */
+  attractionAlts?: Slot[];
+  restaurantAlts?: Slot[];
 };
 
 const BASE = process.env.NEXT_PUBLIC_API_URL || "https://scoute.app/api";
@@ -46,18 +48,22 @@ function poiHref(s: Slot): string | null {
   return `/poi/attraction/${s.id}`;
 }
 
-export default function TripTimeline({ tripId, citySlug, days, alternativesByCity }: Props) {
+export default function TripTimeline({
+  tripId, citySlug, days, attractionAlts = [], restaurantAlts = [],
+}: Props) {
   const [program, setProgram] = useState<Day[]>(days);
-  const [swapForSlot, setSwapForSlot] = useState<{ dayIdx: number; slotIdx: number } | null>(null);
+  const [swapForSlot, setSwapForSlot] = useState<{
+    dayIdx: number; slotIdx: number; kind: "attraction" | "restaurant";
+  } | null>(null);
   const [savingSwap, setSavingSwap] = useState(false);
 
-  const allAlternatives = useMemo<Slot[]>(() => {
-    if (!alternativesByCity || !citySlug) return [];
-    return alternativesByCity[citySlug] || [];
-  }, [alternativesByCity, citySlug]);
+  const swapAlternatives = useMemo<Slot[]>(() => {
+    if (!swapForSlot) return [];
+    return swapForSlot.kind === "restaurant" ? restaurantAlts : attractionAlts;
+  }, [swapForSlot, restaurantAlts, attractionAlts]);
 
-  function openSwap(dayIdx: number, slotIdx: number) {
-    setSwapForSlot({ dayIdx, slotIdx });
+  function openSwap(dayIdx: number, slotIdx: number, kind: "attraction" | "restaurant") {
+    setSwapForSlot({ dayIdx, slotIdx, kind });
   }
 
   function closeSwap() {
@@ -214,19 +220,46 @@ export default function TripTimeline({ tripId, citySlug, days, alternativesByCit
                           {icon} {s.name}
                         </Link>
                         <button
-                          onClick={() => openSwap(di, si)}
+                          onClick={() => openSwap(di, si, isMeal ? "restaurant" : "attraction")}
                           className="shrink-0 text-xs px-2 py-1 rounded-md transition hover:bg-gray-100"
                           style={{ color: color, border: `1px solid ${color}40` }}
-                          title="Заменить место"
+                          title={isMeal ? "Заменить ресторан" : "Заменить место"}
                         >
                           🔄
                         </button>
                       </div>
                       {s.description && (
-                        <p className="text-xs text-gray-600 leading-relaxed line-clamp-2">
+                        <p className="text-xs text-gray-600 leading-relaxed line-clamp-2 mb-2">
                           {s.description}
                         </p>
                       )}
+                      {/* Per-slot buy buttons */}
+                      <div className="flex items-center gap-1.5 mt-auto pt-1 flex-wrap">
+                        {!isMeal && s.name && (
+                          <a
+                            href={`https://www.getyourguide.com/s/?q=${encodeURIComponent(s.name)}`}
+                            target="_blank"
+                            rel="noopener sponsored"
+                            className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-md transition hover:scale-105"
+                            style={{ background: "#FFF7ED", color: "#C2410C" }}
+                            title="Найти экскурсию или билет на GetYourGuide"
+                          >
+                            🎫 Билет / экскурсия
+                          </a>
+                        )}
+                        {isMeal && s.name && (
+                          <a
+                            href={`https://www.tripadvisor.com/Search?q=${encodeURIComponent(s.name)}`}
+                            target="_blank"
+                            rel="noopener"
+                            className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-md transition hover:scale-105"
+                            style={{ background: "#FFF7ED", color: "#C2410C" }}
+                            title="Найти на TripAdvisor"
+                          >
+                            🍽 Забронировать
+                          </a>
+                        )}
+                      </div>
                     </div>
                   </article>
                 );
@@ -256,20 +289,20 @@ export default function TripTimeline({ tripId, citySlug, days, alternativesByCit
                   color: "var(--dark)",
                 }}
               >
-                Заменить место
+                {swapForSlot?.kind === "restaurant" ? "Заменить ресторан" : "Заменить место"}
               </div>
               <button onClick={closeSwap} className="text-gray-400 hover:text-gray-700 text-xl">
                 ✕
               </button>
             </div>
             <div className="overflow-y-auto p-4">
-              {allAlternatives.length === 0 ? (
+              {swapAlternatives.length === 0 ? (
                 <div className="text-center text-gray-500 py-8 text-sm">
                   Не удалось загрузить альтернативы для этого города. Попробуйте ещё раз позже.
                 </div>
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  {allAlternatives.slice(0, 18).map((p) => (
+                  {swapAlternatives.slice(0, 18).map((p) => (
                     <button
                       key={p.id}
                       onClick={() => applySwap(p)}

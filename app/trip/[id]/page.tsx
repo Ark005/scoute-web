@@ -140,8 +140,9 @@ export default async function TripPage({
 
   const days = getDays(trip.program);
 
-  // Альтернативы для swap — все attractions города (без id'шек уже стоящих в маршруте)
-  let alternativesByCity: Record<string, any[]> = {};
+  // Альтернативы для swap — раздельно: attractions и restaurants
+  let attractionAlts: any[] = [];
+  let restaurantAlts: any[] = [];
   if (trip.city_slug) {
     try {
       const resp = await fetch(`${BASE}/city-pois/?city=${trip.city_slug}`, {
@@ -159,8 +160,11 @@ export default async function TripPage({
           const items = getDayItems(day);
           for (const s of items) if (s.id) usedIds.add(s.id);
         }
-        alternativesByCity[trip.city_slug] = (d.attractions || [])
+        attractionAlts = (d.attractions || [])
           .filter((a: any) => a.image_url && !usedIds.has(a.id))
+          .slice(0, 30);
+        restaurantAlts = (d.restaurants || [])
+          .filter((r: any) => r.image_url && !usedIds.has(r.id))
           .slice(0, 30);
       }
     } catch {}
@@ -230,7 +234,8 @@ export default async function TripPage({
             tripId={trip.id}
             citySlug={trip.city_slug}
             days={days as any}
-            alternativesByCity={alternativesByCity}
+            attractionAlts={attractionAlts}
+            restaurantAlts={restaurantAlts}
           />
         </section>
       ) : (
