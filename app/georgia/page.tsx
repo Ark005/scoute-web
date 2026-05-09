@@ -646,24 +646,30 @@ export default async function GeorgiaPage() {
                   </a>
                   <AffiliateDisclaimer />
                 </div>
-                <a
-                  href="https://www.booking.com/searchresults.html?ss=Tbilisi%2C+Georgia"
-                  target="_blank"
-                  rel="noopener sponsored"
-                  className="inline-flex items-center gap-2 px-5 py-3 rounded-xl font-semibold transition hover:scale-105"
-                  style={{ background: "#003B95", color: "white" }}
-                >
-                  🏨 Найти отель
-                </a>
-                <a
-                  href="https://www.getyourguide.com/s/?q=Tbilisi"
-                  target="_blank"
-                  rel="noopener sponsored"
-                  className="inline-flex items-center gap-2 px-5 py-3 rounded-xl font-semibold transition hover:scale-105"
-                  style={{ background: "#F47B21", color: "white" }}
-                >
-                  🎫 Экскурсии
-                </a>
+                <div className="flex flex-col items-stretch">
+                  <a
+                    href="https://www.booking.com/searchresults.html?ss=Tbilisi%2C+Georgia"
+                    target="_blank"
+                    rel="noopener sponsored"
+                    className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold transition hover:scale-105"
+                    style={{ background: "#003B95", color: "white" }}
+                  >
+                    🏨 Найти отель
+                  </a>
+                  <AffiliateDisclaimer />
+                </div>
+                <div className="flex flex-col items-stretch">
+                  <a
+                    href="https://www.getyourguide.com/s/?q=Tbilisi"
+                    target="_blank"
+                    rel="noopener sponsored"
+                    className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold transition hover:scale-105"
+                    style={{ background: "#F47B21", color: "white" }}
+                  >
+                    🎫 Экскурсии
+                  </a>
+                  <AffiliateDisclaimer />
+                </div>
               </div>
               <div className="text-center text-xs text-gray-500">
                 Цифры выше — ориентир. По кнопкам реальные цены и бронирование на партнёрских сайтах.

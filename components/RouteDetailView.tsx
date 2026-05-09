@@ -8,6 +8,7 @@ import { RouteDetail, Waypoint } from "@/lib/types";
 import { REGION_LABELS } from "@/lib/regions";
 import { CITIES } from "@/lib/cities-data";
 import TransportBlock from "./TransportBlock";
+import WikimediaCredit from "./WikimediaCredit";
 
 const RouteMap = dynamic(() => import("./RouteMap"), { ssr: false });
 
@@ -529,6 +530,9 @@ function WaypointCard({
                 className="object-cover hover:scale-105 transition-transform duration-300"
                 sizes="400px"
               />
+              <div className="absolute bottom-1 right-1.5">
+                <WikimediaCredit imageUrl={wp.image_url} />
+              </div>
             </div>
           )}
 

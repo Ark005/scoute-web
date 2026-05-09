@@ -5,7 +5,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { CityPOI } from "@/lib/types";
 import AddToTripButton from "@/components/AddToTripButton";
-import { addToTripDraft } from "@/lib/tripDraft";
+import {
+  addToTripDraft,
+  getTripDraft,
+  isInTripDraft,
+  removeFromTripDraft,
+  subscribeTripDraft,
+} from "@/lib/tripDraft";
 
 type Props = {
   citySlug: string;
@@ -117,7 +123,36 @@ export default function CityExplorer({ citySlug, cityName, pois, events = [] }: 
     { id: 3, pois: [] },
   ]);
   const [activeDayIdx, setActiveDayIdx] = useState<number>(0);
+  const [draftPoiIds, setDraftPoiIds] = useState<Set<number>>(new Set());
   const [listening, setListening] = useState(false);
+
+  useEffect(() => {
+    const sync = () => {
+      const ids = new Set<number>();
+      for (const it of getTripDraft()) {
+        if (it.kind === "poi") ids.add(it.id);
+      }
+      setDraftPoiIds(ids);
+    };
+    sync();
+    return subscribeTripDraft(sync);
+  }, []);
+
+  function toggleDraft(p: CityPOI, ev?: React.MouseEvent) {
+    ev?.preventDefault();
+    ev?.stopPropagation();
+    if (isInTripDraft("poi", p.id)) {
+      removeFromTripDraft("poi", p.id);
+    } else {
+      addToTripDraft({
+        kind: "poi",
+        id: p.id,
+        name: p.name,
+        city_slug: citySlug,
+        image_url: p.image_url ?? null,
+      });
+    }
+  }
   const recRef = useRef<any>(null);
   const restCarouselRef = useRef<HTMLDivElement>(null);
 
@@ -411,20 +446,37 @@ export default function CityExplorer({ citySlug, cityName, pois, events = [] }: 
                             </div>
                           </div>
                         </Link>
-                        {/* Add to planner button */}
-                        <button
-                          onClick={(e) => addToActiveDay(p, e)}
-                          aria-label={placed ? "Убрать из дня" : "Добавить в день"}
-                          className="absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center transition hover:scale-110"
-                          style={{
-                            background: placed ? "var(--blue)" : "rgba(255,255,255,0.95)",
-                            color: placed ? "white" : "#0F172A",
-                            boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-                            fontSize: 18,
-                          }}
+                        {/* Action buttons: in draft (🧭) + in active day (+) */}
+                        <div className="absolute top-2 right-2 flex flex-row-reverse gap-1.5">
+                          <button
+                            onClick={(e) => addToActiveDay(p, e)}
+                            aria-label={placed ? "Убрать из дня" : "Добавить в день"}
+                            title={placed ? "В этом дне — нажмите чтобы убрать" : "Добавить в активный день"}
+                            className="w-8 h-8 rounded-full flex items-center justify-center transition hover:scale-110"
+                            style={{
+                              background: placed ? "var(--blue)" : "rgba(255,255,255,0.95)",
+                              color: placed ? "white" : "#0F172A",
+                              boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                              fontSize: 18,
+                            }}
                         >
                           {placed ? "✓" : "+"}
                         </button>
+                          <button
+                            onClick={(e) => toggleDraft(p, e)}
+                            aria-label={draftPoiIds.has(p.id) ? "Убрать из маршрута" : "В маршрут"}
+                            title={draftPoiIds.has(p.id) ? "В маршруте — нажмите чтобы убрать" : "Добавить в маршрут"}
+                            className="w-8 h-8 rounded-full flex items-center justify-center transition hover:scale-110"
+                            style={{
+                              background: draftPoiIds.has(p.id) ? "#10B981" : "rgba(255,255,255,0.95)",
+                              color: draftPoiIds.has(p.id) ? "white" : "#0F172A",
+                              boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                              fontSize: 14,
+                            }}
+                          >
+                            {draftPoiIds.has(p.id) ? "✓" : "🧭"}
+                          </button>
+                        </div>
                       </div>
                     );
                   })}

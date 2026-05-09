@@ -325,24 +325,30 @@ export default async function TripPage({
             </a>
             <AffiliateDisclaimer />
           </div>
-          <a
-            href={`https://www.booking.com/searchresults.html?ss=${encodeURIComponent(trip.city_slug || "Tbilisi")}%2C+Georgia`}
-            target="_blank"
-            rel="noopener"
-            className="inline-flex items-center gap-2 px-5 py-3 rounded-xl font-semibold text-white transition hover:scale-105"
-            style={{ background: "#003B95" }}
-          >
-            🏨 Отель {trip.city_slug ? `в ${trip.city_slug}` : ""}
-          </a>
-          <a
-            href={`https://www.getyourguide.com/s/?q=${encodeURIComponent(trip.city_slug || "Tbilisi")}`}
-            target="_blank"
-            rel="noopener"
-            className="inline-flex items-center gap-2 px-5 py-3 rounded-xl font-semibold text-white transition hover:scale-105"
-            style={{ background: "#F47B21" }}
-          >
-            🎫 Экскурсии
-          </a>
+          <div className="flex flex-col items-stretch">
+            <a
+              href={`https://www.booking.com/searchresults.html?ss=${encodeURIComponent(trip.city_slug || "Tbilisi")}%2C+Georgia`}
+              target="_blank"
+              rel="noopener sponsored"
+              className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold text-white transition hover:scale-105"
+              style={{ background: "#003B95" }}
+            >
+              🏨 Отель {trip.city_slug ? `в ${trip.city_slug}` : ""}
+            </a>
+            <AffiliateDisclaimer />
+          </div>
+          <div className="flex flex-col items-stretch">
+            <a
+              href={`https://www.getyourguide.com/s/?q=${encodeURIComponent(trip.city_slug || "Tbilisi")}`}
+              target="_blank"
+              rel="noopener sponsored"
+              className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold text-white transition hover:scale-105"
+              style={{ background: "#F47B21" }}
+            >
+              🎫 Экскурсии
+            </a>
+            <AffiliateDisclaimer />
+          </div>
         </div>
       </div>
 

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { RouteListItem } from "@/lib/types";
 import { REGION_LABELS } from "@/lib/regions";
+import WikimediaCredit from "./WikimediaCredit";
 
 interface Props {
   route: RouteListItem;
@@ -61,6 +62,11 @@ export default function RouteCard({ route }: Props) {
           <div className="absolute top-3 right-3 bg-black/50 backdrop-blur-sm text-white text-xs font-semibold px-2 py-1 rounded-full">
             {route.duration_days} {dayWord(route.duration_days)}
           </div>
+          {route.cover_image && (
+            <div className="absolute bottom-1.5 right-2">
+              <WikimediaCredit imageUrl={route.cover_image} />
+            </div>
+          )}
         </div>
 
         {/* Body */}
