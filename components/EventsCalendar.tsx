@@ -1,3 +1,5 @@
+import AddToTripButton from "@/components/AddToTripButton";
+
 type EventItem = {
   id: number;
   name: string;
@@ -11,6 +13,11 @@ type EventItem = {
 
 type Props = {
   events: EventItem[];
+  title?: string;
+  subtitle?: string;
+  dateFrom?: string | null; // ISO yyyy-mm-dd
+  dateTo?: string | null;   // ISO yyyy-mm-dd
+  limit?: number;
 };
 
 const TYPE_LABEL: Record<string, { label: string; emoji: string; color: string }> = {
@@ -39,15 +46,23 @@ function formatDate(iso: string | null): { day: string; month: string; weekday: 
   };
 }
 
-export default function EventsCalendar({ events }: Props) {
+export default function EventsCalendar({
+  events,
+  title,
+  subtitle,
+  dateFrom,
+  dateTo,
+  limit = 12,
+}: Props) {
   if (!events || events.length === 0) return null;
 
-  // Filter: only future events with image
   const today = new Date().toISOString().slice(0, 10);
+  const lowerBound = dateFrom || today;
   const upcoming = events
-    .filter((e) => e.event_date && e.event_date >= today)
+    .filter((e) => e.event_date && e.event_date >= lowerBound)
+    .filter((e) => (dateTo ? (e.event_date as string) <= dateTo : true))
     .filter((e) => e.image_url)
-    .slice(0, 12);
+    .slice(0, limit);
 
   if (upcoming.length === 0) return null;
 
@@ -65,11 +80,10 @@ export default function EventsCalendar({ events }: Props) {
             color: "var(--dark)",
           }}
         >
-          Что в Тбилиси на ближайшие дни
+          {title || "Что в Тбилиси на ближайшие дни"}
         </h2>
         <p className="text-gray-600 mt-2 max-w-2xl leading-relaxed">
-          Концерты, спектакли, фестивали — собрано из allevents.in.
-          Билет — у организаторов по ссылке.
+          {subtitle || "Концерты, спектакли, фестивали — собрано из allevents.in. Билет — у организаторов по ссылке."}
         </p>
       </div>
 
@@ -78,11 +92,8 @@ export default function EventsCalendar({ events }: Props) {
           const date = formatDate(e.event_date);
           const t = TYPE_LABEL[e.event_type] || TYPE_LABEL.other;
           return (
-            <a
+            <div
               key={e.id}
-              href={e.ticket_url || `/poi/attraction/${e.id}`}
-              target={e.ticket_url ? "_blank" : undefined}
-              rel={e.ticket_url ? "noopener" : undefined}
               className="group flex gap-3 rounded-2xl overflow-hidden bg-white transition hover:shadow-lg"
               style={{ border: "1px solid #E5E7EB" }}
             >
@@ -114,7 +125,7 @@ export default function EventsCalendar({ events }: Props) {
                 </div>
               )}
               {/* Content */}
-              <div className="flex-1 min-w-0 py-3 pr-3">
+              <div className="flex-1 min-w-0 py-3 pr-3 flex flex-col">
                 <div className="flex items-center gap-1.5 mb-1.5">
                   <span
                     className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider text-white"
@@ -135,10 +146,35 @@ export default function EventsCalendar({ events }: Props) {
                   {e.name}
                 </div>
                 {e.description && (
-                  <div className="text-[11px] text-gray-500 line-clamp-2">
+                  <div className="text-[11px] text-gray-500 line-clamp-2 mb-2">
                     {e.description}
                   </div>
                 )}
+                <div className="mt-auto flex flex-wrap items-center gap-1.5 pt-1.5">
+                  <AddToTripButton
+                    item={{
+                      kind: "event",
+                      id: e.id,
+                      name: e.name,
+                      event_date: e.event_date,
+                      event_time: e.event_time,
+                      event_type: e.event_type,
+                      image_url: e.image_url,
+                      ticket_url: e.ticket_url,
+                    }}
+                  />
+                  {e.ticket_url && (
+                    <a
+                      href={e.ticket_url}
+                      target="_blank"
+                      rel="noopener"
+                      className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-bold uppercase tracking-wider transition hover:opacity-80"
+                      style={{ background: "#F3F4F6", color: "var(--dark)" }}
+                    >
+                      Билеты ↗
+                    </a>
+                  )}
+                </div>
               </div>
               {/* Image */}
               {e.image_url && (
@@ -151,7 +187,7 @@ export default function EventsCalendar({ events }: Props) {
                   />
                 </div>
               )}
-            </a>
+            </div>
           );
         })}
       </div>

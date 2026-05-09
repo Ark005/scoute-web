@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import Logo from "./Logo";
 
 const NAV_LINKS = [
   { href: "/georgia", label: "Грузия" },
@@ -27,9 +28,10 @@ export default function NavBar() {
         {/* Logo */}
         <Link
           href="/"
-          className="font-bold text-white text-lg tracking-tight hover:opacity-90 transition shrink-0"
+          aria-label="Scoute — на главную"
+          className="hover:opacity-90 transition shrink-0"
         >
-          Scoute
+          <Logo size={30} animated wordmark variant="light" />
         </Link>
 
         {/* Desktop nav */}
