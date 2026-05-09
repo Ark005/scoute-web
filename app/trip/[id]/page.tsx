@@ -2,6 +2,7 @@ import type React from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import TripTimeline from "@/components/TripTimeline";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL || "https://scoute.app/api";
 
@@ -139,6 +140,32 @@ export default async function TripPage({
 
   const days = getDays(trip.program);
 
+  // Альтернативы для swap — все attractions города (без id'шек уже стоящих в маршруте)
+  let alternativesByCity: Record<string, any[]> = {};
+  if (trip.city_slug) {
+    try {
+      const resp = await fetch(`${BASE}/city-pois/?city=${trip.city_slug}`, {
+        headers: {
+          "User-Agent": "ScouteSSR/1.0",
+          "Authorization": "Basic c2NvdXQ6U2NvdXQyMDI2IQ==",
+          "Referer": "https://scoute.app",
+        },
+        next: { revalidate: 3600 },
+      });
+      if (resp.ok) {
+        const d = await resp.json();
+        const usedIds = new Set<number>();
+        for (const day of days) {
+          const items = getDayItems(day);
+          for (const s of items) if (s.id) usedIds.add(s.id);
+        }
+        alternativesByCity[trip.city_slug] = (d.attractions || [])
+          .filter((a: any) => a.image_url && !usedIds.has(a.id))
+          .slice(0, 30);
+      }
+    } catch {}
+  }
+
   return (
     <main className="max-w-3xl mx-auto px-4 py-6">
       <div className="mb-6">
@@ -193,49 +220,18 @@ export default async function TripPage({
         </div>
       </div>
 
-      {/* Program by days */}
+      {/* Program by days — interactive timeline */}
       {days.length > 0 ? (
         <section className="mb-8">
           <h2 className="text-xl font-extrabold mb-4" style={{ color: "var(--dark)" }}>
             Программа по дням
           </h2>
-          <div className="space-y-5">
-            {days.map((d: any, i: number) => {
-              const items = getDayItems(d);
-              const dayLabel =
-                d.day_label || d.date || `День ${d.day || d.day_number || i + 1}`;
-              return (
-                <div
-                  key={i}
-                  className="rounded-2xl border p-5"
-                  style={{ borderColor: "#E5E7EB", background: "white" }}
-                >
-                  <div
-                    className="font-bold text-base mb-3"
-                    style={{ color: "var(--dark)" }}
-                  >
-                    {dayLabel}
-                  </div>
-                  {items.length === 0 ? (
-                    <div className="text-sm text-gray-500">
-                      План на этот день пока пуст.
-                    </div>
-                  ) : (
-                    <ul className="space-y-2">
-                      {items.map((it: any, j: number) => (
-                        <li
-                          key={j}
-                          className="text-sm leading-relaxed"
-                        >
-                          {renderSlot(it)}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+          <TripTimeline
+            tripId={trip.id}
+            citySlug={trip.city_slug}
+            days={days as any}
+            alternativesByCity={alternativesByCity}
+          />
         </section>
       ) : (
         <div className="rounded-2xl border p-5 mb-8 text-sm text-gray-600" style={{ borderColor: "#E5E7EB", background: "white" }}>
@@ -245,6 +241,42 @@ export default async function TripPage({
           </pre>
         </div>
       )}
+
+      {/* Buy CTAs */}
+      <div className="my-8">
+        <h3 className="text-lg font-extrabold mb-3" style={{ color: "var(--dark)" }}>
+          Купить
+        </h3>
+        <div className="flex flex-wrap gap-3">
+          <a
+            href={`https://www.aviasales.ru/search/MOW${(() => { const d = new Date(); d.setDate(d.getDate() + 30); return String(d.getDate()).padStart(2, "0") + String(d.getMonth() + 1).padStart(2, "0"); })()}TBS1?marker=521784`}
+            target="_blank"
+            rel="noopener sponsored"
+            className="inline-flex items-center gap-2 px-5 py-3 rounded-xl font-semibold text-white transition hover:scale-105"
+            style={{ background: "#FF6B1B" }}
+          >
+            🛫 Билеты в Грузию
+          </a>
+          <a
+            href={`https://www.booking.com/searchresults.html?ss=${encodeURIComponent(trip.city_slug || "Tbilisi")}%2C+Georgia`}
+            target="_blank"
+            rel="noopener"
+            className="inline-flex items-center gap-2 px-5 py-3 rounded-xl font-semibold text-white transition hover:scale-105"
+            style={{ background: "#003B95" }}
+          >
+            🏨 Отель {trip.city_slug ? `в ${trip.city_slug}` : ""}
+          </a>
+          <a
+            href={`https://www.getyourguide.com/s/?q=${encodeURIComponent(trip.city_slug || "Tbilisi")}`}
+            target="_blank"
+            rel="noopener"
+            className="inline-flex items-center gap-2 px-5 py-3 rounded-xl font-semibold text-white transition hover:scale-105"
+            style={{ background: "#F47B21" }}
+          >
+            🎫 Экскурсии
+          </a>
+        </div>
+      </div>
 
       {/* Share */}
       <div
