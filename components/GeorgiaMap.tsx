@@ -164,10 +164,11 @@ export default function GeorgiaMap() {
         boundsOptions={{ padding: [20, 20] }}
         scrollWheelZoom={false}
         style={{ width: "100%", height: "100%", background: "#F1ECDF" }}
-        attributionControl={false}
       >
         <TileLayer
-          url="https://api.maptiler.com/maps/streets-v2/256/{z}/{x}/{y}.png?key=6J7pYibiqlRiksixjccO&lang=ru"
+          url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors'
+          maxZoom={19}
         />
         {geojson && (
           <GeoJSON

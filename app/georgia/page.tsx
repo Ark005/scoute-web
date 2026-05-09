@@ -565,7 +565,7 @@ export default async function GeorgiaPage() {
                     color: "var(--dark)",
                   }}
                 >
-                  Во сколько обойдётся Грузия
+                  Во сколько обойдётся поездка в Грузию
                 </h2>
                 <p className="text-gray-600 max-w-2xl leading-relaxed">
                   Реальные цены по Тбилиси, на человека в день. Без перелёта.

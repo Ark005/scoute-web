@@ -5,13 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { CityPOI } from "@/lib/types";
 import AddToTripButton from "@/components/AddToTripButton";
-import {
-  addToTripDraft,
-  getTripDraft,
-  isInTripDraft,
-  removeFromTripDraft,
-  subscribeTripDraft,
-} from "@/lib/tripDraft";
 
 type Props = {
   citySlug: string;
@@ -113,7 +106,7 @@ function absUrl(u?: string): string {
 }
 
 export default function CityExplorer({ citySlug, cityName, pois, events = [] }: Props) {
-  const router = useRouter();
+  const _router = useRouter();
   const [tab, setTab] = useState<Tab>("combined");
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
@@ -123,35 +116,19 @@ export default function CityExplorer({ citySlug, cityName, pois, events = [] }: 
     { id: 3, pois: [] },
   ]);
   const [activeDayIdx, setActiveDayIdx] = useState<number>(0);
-  const [draftPoiIds, setDraftPoiIds] = useState<Set<number>>(new Set());
+  // Buffer выбранных POI на карточках — Flutter equivalent: _selectedIds
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [listening, setListening] = useState(false);
 
-  useEffect(() => {
-    const sync = () => {
-      const ids = new Set<number>();
-      for (const it of getTripDraft()) {
-        if (it.kind === "poi") ids.add(it.id);
-      }
-      setDraftPoiIds(ids);
-    };
-    sync();
-    return subscribeTripDraft(sync);
-  }, []);
-
-  function toggleDraft(p: CityPOI, ev?: React.MouseEvent) {
+  function toggleSelected(p: CityPOI, ev?: React.MouseEvent) {
     ev?.preventDefault();
     ev?.stopPropagation();
-    if (isInTripDraft("poi", p.id)) {
-      removeFromTripDraft("poi", p.id);
-    } else {
-      addToTripDraft({
-        kind: "poi",
-        id: p.id,
-        name: p.name,
-        city_slug: citySlug,
-        image_url: p.image_url ?? null,
-      });
-    }
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(p.id)) next.delete(p.id);
+      else next.add(p.id);
+      return next;
+    });
   }
   const recRef = useRef<any>(null);
   const restCarouselRef = useRef<HTMLDivElement>(null);
@@ -235,21 +212,28 @@ export default function CityExplorer({ citySlug, cityName, pois, events = [] }: 
     setDays((d) => d.map((x, i) => (i === activeDayIdx ? { ...x, pois: [...x.pois, p] } : x)));
   }
 
-  function saveAsDraft() {
-    let count = 0;
-    for (const d of days) {
-      for (const p of d.pois) {
-        addToTripDraft({
-          kind: "poi",
-          id: p.id,
-          name: p.name,
-          city_slug: citySlug,
-          image_url: p.image_url ?? null,
-        });
-        count++;
+  // Flutter parity: _sendSelectedToBoard — раскидать выбранные по дням round-robin,
+  // переключиться в режим планера, очистить буфер.
+  function sendSelectedToBoard() {
+    if (selectedIds.size === 0) return;
+    const selected = pois.filter((p) => selectedIds.has(p.id));
+    setDays((current) => {
+      const next = current.map((d) => ({ ...d }));
+      const placedNow = new Set<number>(next.flatMap((d) => d.pois.map((p) => p.id)));
+      let cursor = activeDayIdx;
+      for (const p of selected) {
+        if (placedNow.has(p.id)) continue;
+        while (cursor < next.length && next[cursor].pois.length >= 5) cursor++;
+        if (cursor >= next.length) {
+          next.push({ id: Math.max(0, ...next.map((x) => x.id)) + 1, pois: [] });
+        }
+        next[cursor].pois.push(p);
+        placedNow.add(p.id);
       }
-    }
-    if (count > 0) router.push("/trip/draft");
+      return next;
+    });
+    setSelectedIds(new Set());
+    setTab("board");
   }
 
   function autofill() {
@@ -400,15 +384,18 @@ export default function CityExplorer({ citySlug, cityName, pois, events = [] }: 
                   {filteredPois.map((p) => {
                     const cat = categoryLabel(p.category);
                     const placed = placedIds.has(p.id);
+                    const selected = selectedIds.has(p.id);
                     return (
                       <div
                         key={p.id}
                         className="group relative rounded-2xl overflow-hidden bg-white transition hover:shadow-xl"
                         style={{
-                          border: placed ? "2px solid var(--blue)" : "1px solid #E5E7EB",
+                          border:
+                            selected || placed
+                              ? "2px solid var(--blue, #1B4DFF)"
+                              : "1px solid #E5E7EB",
                         }}
                       >
-                        {/* CARD as link to detail */}
                         <Link href={poiHref(p)} className="block">
                           <div className="relative aspect-[4/3] bg-gray-100 overflow-hidden">
                             {p.image_url ? (
@@ -430,7 +417,7 @@ export default function CityExplorer({ citySlug, cityName, pois, events = [] }: 
                               {cat.emoji} {cat.label}
                             </div>
                           </div>
-                          <div className="p-3">
+                          <div className="p-3 pr-12">
                             <div
                               className="font-bold text-sm leading-tight mb-1.5"
                               style={{ color: "#0F172A" }}
@@ -446,37 +433,24 @@ export default function CityExplorer({ citySlug, cityName, pois, events = [] }: 
                             </div>
                           </div>
                         </Link>
-                        {/* Action buttons: in draft (🧭) + in active day (+) */}
-                        <div className="absolute top-2 right-2 flex flex-row-reverse gap-1.5">
-                          <button
-                            onClick={(e) => addToActiveDay(p, e)}
-                            aria-label={placed ? "Убрать из дня" : "Добавить в день"}
-                            title={placed ? "В этом дне — нажмите чтобы убрать" : "Добавить в активный день"}
-                            className="w-8 h-8 rounded-full flex items-center justify-center transition hover:scale-110"
-                            style={{
-                              background: placed ? "var(--blue)" : "rgba(255,255,255,0.95)",
-                              color: placed ? "white" : "#0F172A",
-                              boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-                              fontSize: 18,
-                            }}
+                        {/* Радиокнопка в правом нижнем углу — Flutter parity */}
+                        <button
+                          type="button"
+                          onClick={(e) => toggleSelected(p, e)}
+                          aria-label={selected ? "Убрать из выбранных" : "Выбрать"}
+                          title={selected ? "Выбрано — нажмите чтобы снять" : "Выбрать в маршрут"}
+                          className="absolute bottom-2 right-2 w-7 h-7 rounded-full flex items-center justify-center transition active:scale-95"
+                          style={{
+                            background: selected ? "var(--blue, #1B4DFF)" : "white",
+                            border: `2px solid ${selected ? "var(--blue, #1B4DFF)" : "#D1D5DB"}`,
+                            color: "white",
+                            boxShadow: "0 2px 6px rgba(0,0,0,0.10)",
+                            fontSize: 13,
+                            lineHeight: 1,
+                          }}
                         >
-                          {placed ? "✓" : "+"}
+                          {selected ? "✓" : ""}
                         </button>
-                          <button
-                            onClick={(e) => toggleDraft(p, e)}
-                            aria-label={draftPoiIds.has(p.id) ? "Убрать из маршрута" : "В маршрут"}
-                            title={draftPoiIds.has(p.id) ? "В маршруте — нажмите чтобы убрать" : "Добавить в маршрут"}
-                            className="w-8 h-8 rounded-full flex items-center justify-center transition hover:scale-110"
-                            style={{
-                              background: draftPoiIds.has(p.id) ? "#10B981" : "rgba(255,255,255,0.95)",
-                              color: draftPoiIds.has(p.id) ? "white" : "#0F172A",
-                              boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-                              fontSize: 14,
-                            }}
-                          >
-                            {draftPoiIds.has(p.id) ? "✓" : "🧭"}
-                          </button>
-                        </div>
                       </div>
                     );
                   })}
@@ -682,15 +656,6 @@ export default function CityExplorer({ citySlug, cityName, pois, events = [] }: 
                 >
                   ✨ Автозаполнение
                 </button>
-                <button
-                  onClick={saveAsDraft}
-                  disabled={placedIds.size === 0}
-                  className="px-3 py-1.5 rounded-lg text-xs font-bold text-white disabled:opacity-40"
-                  style={{ background: "var(--blue, #2563EB)" }}
-                  title="Сохранить как черновик маршрута"
-                >
-                  💾 В маршрут ({placedIds.size})
-                </button>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {days.map((d, i) => {
@@ -776,6 +741,44 @@ export default function CityExplorer({ citySlug, cityName, pois, events = [] }: 
           )}
         </div>
       </div>
+
+      {/* Sticky action-bar — Flutter parity (_selectedIds bottom panel) */}
+      {selectedIds.size > 0 && (
+        <div
+          className="fixed left-0 right-0 bottom-0 z-50"
+          style={{
+            background: "#0F172A",
+            boxShadow: "0 -8px 24px rgba(0,0,0,0.18)",
+            paddingBottom: "env(safe-area-inset-bottom, 0)",
+          }}
+        >
+          <div className="max-w-screen-2xl mx-auto px-4 py-3 flex items-center gap-3">
+            <span
+              className="px-3 py-1.5 rounded-full text-xs font-bold text-white"
+              style={{ background: "var(--blue, #1B4DFF)" }}
+            >
+              {selectedIds.size} выбрано
+            </span>
+            <button
+              type="button"
+              onClick={() => setSelectedIds(new Set())}
+              className="text-white/60 text-sm hover:text-white/90 transition px-2"
+            >
+              Сбросить
+            </button>
+            <div className="flex-1" />
+            <button
+              type="button"
+              onClick={sendSelectedToBoard}
+              className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-bold text-white transition hover:scale-105"
+              style={{ background: "#FF6B1B" }}
+            >
+              <span aria-hidden>▦</span>
+              На доску
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
