@@ -21,6 +21,7 @@ export async function generateMetadata({
   return {
     title: g.title,
     description: g.description,
+    robots: "noindex, nofollow",
     openGraph: {
       title: g.h1,
       description: g.description,
@@ -105,6 +106,12 @@ export default async function GuidePage({
       />
 
       <article className="max-w-3xl mx-auto px-4 py-8 md:py-12">
+        <div
+          className="mb-6 px-4 py-3 rounded-xl text-sm font-semibold"
+          style={{ background: "#FFE4B5", border: "1px solid #F47B21", color: "#7A3E0A" }}
+        >
+          ⚠️ ЧЕРНОВИК — текст в редактуре у автора. Не индексируется. Не цитировать.
+        </div>
         <nav className="text-sm text-gray-500 mb-6" aria-label="Хлебные крошки">
           <Link href="/georgia" className="hover:underline">
             Грузия

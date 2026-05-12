@@ -48,12 +48,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly" as const,
       priority: 0.8,
     })),
-    ...getAllGuides().map((g) => ({
-      url: `https://scoute.app/guide/${g.slug}`,
-      lastModified: new Date(g.updatedAt),
-      changeFrequency: "monthly" as const,
-      priority: 0.85,
-    })),
+    // guides сейчас в черновике, не индексируем — вернутся в sitemap после ревью
     ...poiEntries,
   ];
 }
