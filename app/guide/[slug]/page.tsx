@@ -1,8 +1,7 @@
-// @ts-nocheck — гиды временно за notFound() (см. строку с notFound() ниже), черновик у автора. Снять вместе с notFound() при возврате.
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getGuide, getAllGuideSlugs } from "@/lib/guides";
+import { getGuide, getAllGuideSlugs, isGuidePublished } from "@/lib/guides";
 import { renderGuideMarkdown } from "@/lib/markdown";
 
 export const revalidate = 3600;
@@ -40,10 +39,8 @@ export default async function GuidePage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  // Гиды временно скрыты с прода — тексты в редактуре у автора.
-  // Контент остаётся в content/guides/*.ts. Вернуть = убрать notFound() ниже.
-  notFound();
   const { slug } = await params;
+  if (!isGuidePublished(slug)) notFound();
   const g = getGuide(slug);
   if (!g) notFound();
 
