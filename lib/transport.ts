@@ -76,6 +76,14 @@ const TRANSPORT_LOOKUP: Record<string, Partial<TransportOption>> = {
   // СНГ
   "belarus-zamki-kreposti":  { train_city: "Минск", flight_iata: "MSQ", flight_city: "Минск" },
   "georgia-5days":           { flight_iata: "TBS", flight_city: "Тбилиси" },
+  "georgia-historical":      { flight_iata: "TBS", flight_city: "Тбилиси" },
+  "georgia-full-ring":       { flight_iata: "TBS", flight_city: "Тбилиси" },
+  "georgia-kazbegi":         { flight_iata: "TBS", flight_city: "Тбилиси" },
+  "georgia-wine-kakheti":    { flight_iata: "TBS", flight_city: "Тбилиси" },
+  "georgia-khevsureti-trek": { flight_iata: "TBS", flight_city: "Тбилиси" },
+  "georgia-batumi-beach":    { flight_iata: "BUS", flight_city: "Батуми" },
+  "georgia-svaneti":         { flight_iata: "KUT", flight_city: "Кутаиси" },
+  "georgia-racha":           { flight_iata: "KUT", flight_city: "Кутаиси" },
   "armenia-yerevan-garni":   { flight_iata: "EVN", flight_city: "Ереван" },
 
   // Европа
