@@ -39,6 +39,9 @@ export default async function GuidePage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
+  // Гиды временно скрыты с прода — тексты в редактуре у автора.
+  // Контент остаётся в content/guides/*.ts. Вернуть = убрать notFound() ниже.
+  notFound();
   const { slug } = await params;
   const g = getGuide(slug);
   if (!g) notFound();
