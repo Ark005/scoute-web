@@ -6,6 +6,7 @@ import TripTimeline from "@/components/TripTimeline";
 import EventsCalendar from "@/components/EventsCalendar";
 import AffiliateDisclaimer from "@/components/AffiliateDisclaimer";
 import TourBlock from "@/components/TourBlock";
+import { cityLabel, countryLabel } from "@/lib/labels";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL || "https://scoute.app/api";
 
@@ -233,8 +234,8 @@ export default async function TripPage({
         {trip.title}
       </h1>
       <div className="text-sm text-gray-500 mb-6">
-        {trip.country_slug && <span className="capitalize">{trip.country_slug}</span>}
-        {trip.city_slug && <span> · {trip.city_slug}</span>}
+        {trip.country_slug && <span>{countryLabel(trip.country_slug)}</span>}
+        {trip.city_slug && <span> · {cityLabel(trip.city_slug)}</span>}
         {trip.meta?.days && <span> · {trip.meta.days} дн</span>}
       </div>
 
@@ -250,7 +251,7 @@ export default async function TripPage({
           В приложении: аудиогид «Встреча», навигация, замена POI на ходу, оффлайн.
           Эта программа автоматически подтянется по ссылке.
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-3">
           <a
             href={`scoute://trip/${trip.id}`}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition hover:opacity-90"
@@ -258,19 +259,12 @@ export default async function TripPage({
           >
             Открыть в Scoute
           </a>
-          <button
-            disabled
-            title="App ещё в разработке"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold opacity-50 cursor-not-allowed"
-            style={{ background: "rgba(255,255,255,0.15)", color: "white", border: "1px solid rgba(255,255,255,0.3)" }}
-          >
-            Скачать app (скоро)
-          </button>
+          <span className="text-white/70 text-xs">Скоро на iOS и Android</span>
         </div>
       </div>
 
       {/* Program by days — interactive timeline */}
-      {days.length > 0 ? (
+      {days.length > 0 && (
         <section className="mb-8">
           <h2 className="text-xl font-extrabold mb-4" style={{ color: "var(--dark)" }}>
             Программа по дням
@@ -283,13 +277,6 @@ export default async function TripPage({
             restaurantAlts={restaurantAlts}
           />
         </section>
-      ) : (
-        <div className="rounded-2xl border p-5 mb-8 text-sm text-gray-600" style={{ borderColor: "#E5E7EB", background: "white" }}>
-          Программа сохранена в нестандартном формате. Содержимое:
-          <pre className="mt-3 p-3 rounded-lg text-xs overflow-auto" style={{ background: "#F9FAFB", maxHeight: 240 }}>
-{JSON.stringify(trip.program, null, 2)}
-          </pre>
-        </div>
       )}
 
       {/* Events for trip dates */}
@@ -314,31 +301,26 @@ export default async function TripPage({
           Купить
         </h3>
         <div className="flex flex-wrap gap-3">
-          <div className="flex flex-col items-stretch">
-            <a
-              href={`https://www.aviasales.ru/search/MOW${(() => { const d = new Date(); d.setDate(d.getDate() + 30); return String(d.getDate()).padStart(2, "0") + String(d.getMonth() + 1).padStart(2, "0"); })()}TBS1?marker=521784`}
-              target="_blank"
-              rel="noopener sponsored"
-              className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold text-white transition hover:scale-105"
-              style={{ background: "#FF6B1B" }}
-            >
-              🛫 Билеты в Грузию
-            </a>
-            <AffiliateDisclaimer />
-          </div>
-          <div className="flex flex-col items-stretch">
-            <a
-              href={`https://www.booking.com/searchresults.html?ss=${encodeURIComponent(trip.city_slug || "Tbilisi")}%2C+Georgia`}
-              target="_blank"
-              rel="noopener sponsored"
-              className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold text-white transition hover:scale-105"
-              style={{ background: "#003B95" }}
-            >
-              🏨 Отель {trip.city_slug ? `в ${trip.city_slug}` : ""}
-            </a>
-            <AffiliateDisclaimer />
-          </div>
+          <a
+            href={`https://www.aviasales.ru/search/MOW${(() => { const d = new Date(); d.setDate(d.getDate() + 30); return String(d.getDate()).padStart(2, "0") + String(d.getMonth() + 1).padStart(2, "0"); })()}TBS1?marker=521784`}
+            target="_blank"
+            rel="noopener sponsored"
+            className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold text-white transition hover:scale-105"
+            style={{ background: "#FF6B1B" }}
+          >
+            🛫 Билеты в {countryLabel(trip.country_slug) || "путешествие"}
+          </a>
+          <a
+            href={`https://www.booking.com/searchresults.html?ss=${encodeURIComponent(cityLabel(trip.city_slug) || "Tbilisi")}`}
+            target="_blank"
+            rel="noopener sponsored"
+            className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold text-white transition hover:scale-105"
+            style={{ background: "#003B95" }}
+          >
+            🏨 Отель {trip.city_slug ? `в ${cityLabel(trip.city_slug)}` : ""}
+          </a>
         </div>
+        <AffiliateDisclaimer />
       </div>
 
       {/* Туры-партнёры под город — конкретные экскурсии вместо общего поиска GYG */}
