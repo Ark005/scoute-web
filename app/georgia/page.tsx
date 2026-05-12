@@ -3,7 +3,7 @@ import Image from "next/image";
 import type { Metadata } from "next";
 import { getRoutes, getCities, getCityPOIs, getCityBudgets } from "@/lib/api";
 import type { CityInfo, RouteListItem, CityPOI, CityBudget } from "@/lib/types";
-import { aviasalesUrl } from "@/lib/transport";
+import { aviasalesUrl, localrentUrl } from "@/lib/transport";
 import GeorgiaMapClient from "@/components/GeorgiaMapClient";
 import AffiliateDisclaimer from "@/components/AffiliateDisclaimer";
 import EventsCalendar from "@/components/EventsCalendar";
@@ -684,6 +684,18 @@ export default async function GeorgiaPage() {
                     style={{ background: "#003B95", color: "white" }}
                   >
                     🏨 Найти отель
+                  </a>
+                  <AffiliateDisclaimer />
+                </div>
+                <div className="flex flex-col items-stretch">
+                  <a
+                    href={localrentUrl("georgia")}
+                    target="_blank"
+                    rel="noopener sponsored"
+                    className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold transition hover:scale-105"
+                    style={{ background: "#1B6E3A", color: "white" }}
+                  >
+                    🚗 Арендовать машину
                   </a>
                   <AffiliateDisclaimer />
                 </div>

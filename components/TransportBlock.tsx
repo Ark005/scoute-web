@@ -1,6 +1,6 @@
 "use client";
 
-import { getTransport, aviasalesUrl, tutuUrl } from "@/lib/transport";
+import { getTransport, aviasalesUrl, tutuUrl, localrentUrl } from "@/lib/transport";
 
 interface Props {
   slug: string;
@@ -102,6 +102,27 @@ export default function TransportBlock({ slug, startLat, startLng }: Props) {
               className="text-xs text-blue-600 font-medium hover:underline"
             >
               Билеты →
+            </a>
+          </div>
+        )}
+
+        {/* Аренда машины на месте */}
+        {t.rental_country && (
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-lg">🚗</span>
+              <div>
+                <div className="text-sm font-semibold text-gray-800">Аренда машины</div>
+                <div className="text-xs text-gray-400">на месте, у локальных прокатов</div>
+              </div>
+            </div>
+            <a
+              href={localrentUrl(t.rental_country)}
+              target="_blank"
+              rel="noopener sponsored"
+              className="text-xs text-blue-600 font-medium hover:underline"
+            >
+              Найти →
             </a>
           </div>
         )}

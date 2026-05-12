@@ -12,6 +12,7 @@ export interface TransportOption {
   flight_city?: string;
   train_city?: string;
   bus_available?: boolean;
+  rental_country?: string;
 }
 
 // Москва: 55.7558, 37.6173
@@ -75,16 +76,16 @@ const TRANSPORT_LOOKUP: Record<string, Partial<TransportOption>> = {
 
   // СНГ
   "belarus-zamki-kreposti":  { train_city: "Минск", flight_iata: "MSQ", flight_city: "Минск" },
-  "georgia-5days":           { flight_iata: "TBS", flight_city: "Тбилиси" },
-  "georgia-historical":      { flight_iata: "TBS", flight_city: "Тбилиси" },
-  "georgia-full-ring":       { flight_iata: "TBS", flight_city: "Тбилиси" },
-  "georgia-kazbegi":         { flight_iata: "TBS", flight_city: "Тбилиси" },
-  "georgia-wine-kakheti":    { flight_iata: "TBS", flight_city: "Тбилиси" },
-  "georgia-khevsureti-trek": { flight_iata: "TBS", flight_city: "Тбилиси" },
-  "georgia-batumi-beach":    { flight_iata: "BUS", flight_city: "Батуми" },
-  "georgia-svaneti":         { flight_iata: "KUT", flight_city: "Кутаиси" },
-  "georgia-racha":           { flight_iata: "KUT", flight_city: "Кутаиси" },
-  "armenia-yerevan-garni":   { flight_iata: "EVN", flight_city: "Ереван" },
+  "georgia-5days":           { flight_iata: "TBS", flight_city: "Тбилиси", rental_country: "georgia" },
+  "georgia-historical":      { flight_iata: "TBS", flight_city: "Тбилиси", rental_country: "georgia" },
+  "georgia-full-ring":       { flight_iata: "TBS", flight_city: "Тбилиси", rental_country: "georgia" },
+  "georgia-kazbegi":         { flight_iata: "TBS", flight_city: "Тбилиси", rental_country: "georgia" },
+  "georgia-wine-kakheti":    { flight_iata: "TBS", flight_city: "Тбилиси", rental_country: "georgia" },
+  "georgia-khevsureti-trek": { flight_iata: "TBS", flight_city: "Тбилиси", rental_country: "georgia" },
+  "georgia-batumi-beach":    { flight_iata: "BUS", flight_city: "Батуми", rental_country: "georgia" },
+  "georgia-svaneti":         { flight_iata: "KUT", flight_city: "Кутаиси", rental_country: "georgia" },
+  "georgia-racha":           { flight_iata: "KUT", flight_city: "Кутаиси", rental_country: "georgia" },
+  "armenia-yerevan-garni":   { flight_iata: "EVN", flight_city: "Ереван", rental_country: "armenia" },
 
   // Европа
   "grossglockner-austria":   { flight_iata: "SZG", flight_city: "Зальцбург" },
@@ -116,7 +117,9 @@ export function aviasalesUrl(iata: string): string {
 }
 
 export function tutuUrl(city: string): string {
-  // TODO: Travelpayouts не работает с Tutu.ru — отдельно регнуться в Tutu Affiliate
-  // (https://booking.tutu.ru/affiliate/) когда дойдут руки, и обернуть здесь.
   return `https://www.tutu.ru/poezda/wizard/?st1=%D0%9C%D0%BE%D1%81%D0%BA%D0%B2%D0%B0&st2=${encodeURIComponent(city)}&direction=from`;
+}
+
+export function localrentUrl(country: string): string {
+  return `https://www.localrent.com/${country}`;
 }
