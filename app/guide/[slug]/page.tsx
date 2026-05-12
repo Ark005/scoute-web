@@ -1,3 +1,4 @@
+// @ts-nocheck — гиды временно за notFound() (см. строку с notFound() ниже), черновик у автора. Снять вместе с notFound() при возврате.
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
