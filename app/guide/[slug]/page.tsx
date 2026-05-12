@@ -21,7 +21,7 @@ export async function generateMetadata({
   return {
     title: g.title,
     description: g.description,
-    robots: "noindex, nofollow",
+    robots: isGuidePublished(slug) ? undefined : "noindex, nofollow",
     openGraph: {
       title: g.h1,
       description: g.description,
