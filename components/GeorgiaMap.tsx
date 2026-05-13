@@ -32,10 +32,10 @@ const REGIONS: Record<string, RegionMeta> = {
   "GE-SZ": { sketch: "samegrelo-zemo-svaneti", label: "Сванетия", citySlug: "mestia", count: 28 },
   "GE-RL": { sketch: "racha-lechkhumi", label: "Рача-Лечхуми", citySlug: "racha", count: 30, offset: [0.15, 0] },
   "GE-KK": { sketch: "kvemo-kartli", label: "Квемо-Картли", citySlug: null, count: 0, offset: [-0.15, 0.1] },
-  "GE-GU": { sketch: "guria", label: "Гурия", citySlug: null, count: 0 },
+  // GE-GU (Гурия) — скрыта до наполнения БД (нет городов и POI)
   // GE-AB (Абхазия) — отдельно, не на карте Грузии
 };
-const HIDDEN_ISO = new Set(["GE-AB"]);
+const HIDDEN_ISO = new Set(["GE-AB", "GE-GU"]);
 
 // Approximate Georgia center for fitBounds fallback
 const GEORGIA_BOUNDS: L.LatLngBoundsLiteral = [
