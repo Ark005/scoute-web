@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { MapContainer, TileLayer, GeoJSON, Marker, Popup, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, GeoJSON, Marker, Tooltip, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import Link from "next/link";
@@ -16,6 +16,8 @@ type RegionMeta = {
   citySlug: string | null;
   /** count of POI/cities/etc shown as small badge */
   count: number;
+  /** manual lat/lng offset (deg) to nudge marker off a dense centroid cluster */
+  offset?: [number, number];
 };
 
 // shapeISO from geoBoundaries → our metadata
@@ -23,13 +25,13 @@ const REGIONS: Record<string, RegionMeta> = {
   "GE-TB": { sketch: "tbilisi", label: "Тбилиси", citySlug: "tbilisi", count: 45 },
   "GE-AJ": { sketch: "adjara", label: "Аджария", citySlug: "batumi", count: 41 },
   "GE-IM": { sketch: "imereti", label: "Имеретия", citySlug: "kutaisi", count: 39 },
-  "GE-KA": { sketch: "kakheti", label: "Кахетия", citySlug: "telavi", count: 38 },
-  "GE-MM": { sketch: "mtskheta-mtianeti", label: "Мцхета-Мтианетия", citySlug: "mtskheta", count: 36 },
-  "GE-SJ": { sketch: "samtskhe-javakheti", label: "Самцхе-Джавахетия", citySlug: "javakheti", count: 30 },
-  "GE-SK": { sketch: "shida-kartli", label: "Шида-Картли", citySlug: "gori", count: 30 },
+  "GE-KA": { sketch: "kakheti", label: "Кахетия", citySlug: "telavi", count: 38, offset: [0, 0.15] },
+  "GE-MM": { sketch: "mtskheta-mtianeti", label: "Мцхета-Мтианетия", citySlug: "mtskheta", count: 36, offset: [0.25, -0.05] },
+  "GE-SJ": { sketch: "samtskhe-javakheti", label: "Самцхе-Джавахетия", citySlug: "javakheti", count: 30, offset: [-0.1, 0] },
+  "GE-SK": { sketch: "shida-kartli", label: "Шида-Картли", citySlug: "gori", count: 30, offset: [0, -0.2] },
   "GE-SZ": { sketch: "samegrelo-zemo-svaneti", label: "Сванетия", citySlug: "mestia", count: 28 },
-  "GE-RL": { sketch: "racha-lechkhumi", label: "Рача-Лечхуми", citySlug: "racha", count: 30 },
-  "GE-KK": { sketch: "kvemo-kartli", label: "Квемо-Картли", citySlug: null, count: 0 },
+  "GE-RL": { sketch: "racha-lechkhumi", label: "Рача-Лечхуми", citySlug: "racha", count: 30, offset: [0.15, 0] },
+  "GE-KK": { sketch: "kvemo-kartli", label: "Квемо-Картли", citySlug: null, count: 0, offset: [-0.15, 0.1] },
   "GE-GU": { sketch: "guria", label: "Гурия", citySlug: null, count: 0 },
   // GE-AB (Абхазия) — отдельно, не на карте Грузии
 };
@@ -52,43 +54,35 @@ function FitBounds() {
 function makeRegionMarker(meta: RegionMeta) {
   const linkable = !!meta.citySlug;
   return L.divIcon({
-    className: "",
+    className: "scout-region-marker",
     html: `
       <div style="
-        display:flex;flex-direction:column;align-items:center;
+        position:relative;
+        width:56px;height:56px;
+        background:white;border-radius:14px;
+        box-shadow:0 4px 14px rgba(0,0,0,0.18);
+        display:flex;align-items:center;justify-content:center;
+        padding:5px;
+        border:1px solid rgba(0,0,0,0.06);
         cursor:${linkable ? "pointer" : "default"};
-        transform:translateY(-32px);
       ">
-        <div style="
-          width:64px;height:64px;
-          background:white;border-radius:14px;
-          box-shadow:0 4px 14px rgba(0,0,0,0.18);
-          display:flex;align-items:center;justify-content:center;
-          padding:6px;
-          border:1px solid rgba(0,0,0,0.06);
-        ">
-          <img src="/regions/${meta.sketch}.png"
-            alt="${meta.label}"
-            style="width:100%;height:100%;object-fit:contain;"
-            onerror="this.style.display='none'"
-          />
-        </div>
-        <div style="
-          margin-top:4px;
-          background:white;border-radius:10px;
-          padding:3px 9px;
-          box-shadow:0 2px 6px rgba(0,0,0,0.15);
-          font-size:11px;font-weight:600;color:#0F172A;
-          white-space:nowrap;
-          display:flex;align-items:center;gap:6px;
-        ">
-          <span>${meta.label}</span>
-          ${meta.count ? `<span style="background:#E0E7FF;color:#3730A3;padding:1px 6px;border-radius:6px;font-size:10px;">${meta.count}</span>` : ""}
-        </div>
+        <img src="/regions/${meta.sketch}.png"
+          alt="${meta.label}"
+          style="width:100%;height:100%;object-fit:contain;"
+          onerror="this.style.display='none'"
+        />
+        ${meta.count ? `<span style="
+          position:absolute;top:-6px;right:-6px;
+          background:#3730A3;color:white;
+          font-size:10px;font-weight:700;
+          padding:2px 6px;border-radius:10px;
+          box-shadow:0 2px 4px rgba(0,0,0,0.2);
+          line-height:1;min-width:18px;text-align:center;
+        ">${meta.count}</span>` : ""}
       </div>
     `,
-    iconSize: [180, 100],
-    iconAnchor: [90, 100],
+    iconSize: [56, 56],
+    iconAnchor: [28, 28],
   });
 }
 
@@ -144,8 +138,12 @@ export default function GeorgiaMap() {
       const iso = f.properties?.shapeISO;
       const meta = REGIONS[iso];
       if (!meta) continue;
-      const pos = getCentroid(f.geometry);
-      if (pos) out.push({ iso, pos, meta });
+      const c = getCentroid(f.geometry);
+      if (!c) continue;
+      const pos: [number, number] = meta.offset
+        ? [c[0] + meta.offset[0], c[1] + meta.offset[1]]
+        : c;
+      out.push({ iso, pos, meta });
     }
     return out;
   }, [geojson]);
@@ -224,7 +222,12 @@ export default function GeorgiaMap() {
                   }
                 : undefined
             }
-          />
+          >
+            <Tooltip direction="top" offset={[0, -32]} opacity={1} permanent={false}>
+              <span style={{ fontWeight: 600 }}>{meta.label}</span>
+              {meta.count ? <span style={{ marginLeft: 6, color: "#3730A3" }}>· {meta.count}</span> : null}
+            </Tooltip>
+          </Marker>
         ))}
         <FitBounds />
         <MapAttributionFix />
