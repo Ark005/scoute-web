@@ -173,10 +173,10 @@ export default function GeorgiaMap() {
             data={geojson}
             style={() => ({
               color: "#92400e",
-              weight: 1.2,
+              weight: 2,
               opacity: 0.55,
               fillColor: "#FEF3C7",
-              fillOpacity: 0.18,
+              fillOpacity: 0.35,
             })}
             onEachFeature={(feature, layer) => {
               const iso = feature.properties?.shapeISO;
@@ -199,8 +199,8 @@ export default function GeorgiaMap() {
               });
               layer.on("mouseout", function (e: any) {
                 e.target.setStyle({
-                  fillOpacity: 0.18,
-                  weight: 1.2,
+                  fillOpacity: 0.35,
+                  weight: 2,
                   color: "#92400e",
                   fillColor: "#FEF3C7",
                 });
