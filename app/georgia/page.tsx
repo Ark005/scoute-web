@@ -346,8 +346,8 @@ export default async function GeorgiaPage() {
               >
                 <div className="relative aspect-[3/4] bg-gray-100 overflow-hidden">
                   <Image
-                    src="https://scoute.app/media/route_covers/georgia-wine-kakheti.png"
-                    alt="Кахетия"
+                    src="https://scoute.app/media/cached_images/attraction_1920_c7f14f0c2e.jpg"
+                    alt="Кахетия — Сигнахи, винный регион"
                     fill
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     className="object-cover group-hover:scale-105 transition-transform duration-500"
