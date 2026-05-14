@@ -161,6 +161,17 @@ export default function AIChat() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Auto-send seed message from ?seed= (e.g. from guide CTAs)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const sp = new URLSearchParams(window.location.search);
+    const seed = sp.get("seed");
+    if (seed?.trim()) {
+      setTimeout(() => send(seed.trim()), 400);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const toggleVoice = () => {
     if (!recognitionRef.current) return;
     if (listening) {

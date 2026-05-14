@@ -48,7 +48,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly" as const,
       priority: 0.8,
     })),
-    // guides пока не индексируем — вернутся в sitemap после чистки дыр на /georgia (дедлайн 26 мая)
+    ...getAllGuides().map((g) => ({
+      url: `https://next.scoute.app/guide/${g.slug}`,
+      lastModified: new Date(g.updatedAt),
+      changeFrequency: "monthly" as const,
+      priority: 0.9,
+    })),
     ...poiEntries,
   ];
 }

@@ -126,7 +126,7 @@ export const vardzia: Guide = {
     },
     {
       title: "Составить программу поездки в Грузию",
-      href: "/trip/draft",
+      href: "/autopilot?seed=Хочу поехать в Грузию и увидеть пещерный монастырь Вардзия",
       subtitle: "AI-помощник соберёт по дням",
     },
   ],

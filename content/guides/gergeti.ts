@@ -125,7 +125,7 @@ export const gergeti: Guide = {
     },
     {
       title: "Составить программу поездки в Грузию",
-      href: "/trip/draft",
+      href: "/autopilot?seed=Хочу поехать в Казбеги и подняться к Гергетской Троице",
       subtitle: "AI-помощник соберёт по дням",
     },
   ],

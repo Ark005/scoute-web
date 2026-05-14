@@ -136,7 +136,7 @@ export const abanotubani: Guide = {
     },
     {
       title: "Составить программу поездки в Тбилиси",
-      href: "/trip/draft",
+      href: "/autopilot?seed=Хочу поехать в Тбилиси, зайти в серные бани Абанотубани",
       subtitle: "AI-помощник соберёт по дням",
     },
   ],

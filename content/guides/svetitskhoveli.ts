@@ -137,7 +137,7 @@ export const svetitskhoveli: Guide = {
     },
     {
       title: "Составить программу поездки в Мцхету",
-      href: "/trip/draft",
+      href: "/autopilot?seed=Хочу поехать в Мцхету и увидеть собор Светицховели",
       subtitle: "AI-помощник соберёт по дням",
     },
   ],
