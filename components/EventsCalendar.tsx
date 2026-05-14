@@ -140,7 +140,7 @@ export default function EventsCalendar({
                   )}
                 </div>
                 <div
-                  className="font-bold leading-tight mb-1 line-clamp-2"
+                  className="font-bold leading-tight mb-1"
                   style={{ color: "var(--dark)", fontSize: 14 }}
                 >
                   {e.name}

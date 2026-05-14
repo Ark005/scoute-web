@@ -457,9 +457,9 @@ export default async function GeorgiaPage() {
                         🗺
                       </div>
                     )}
-                    <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+                    <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black via-black/70 to-transparent" />
                     <div className="absolute bottom-0 left-0 right-0 p-5 text-white">
-                      <div className="text-xs uppercase tracking-wider opacity-80 mb-1">
+                      <div className="text-xs uppercase tracking-wider mb-1" style={{ opacity: 0.95 }}>
                         {r.duration_days} дн · {r.distance_km} км
                         {r.is_free ? " · бесплатно" : ""}
                       </div>
