@@ -312,6 +312,123 @@ export default async function GeorgiaPage() {
           ))}
         </section>
 
+        {/* By Themes — крупные эмоциональные карточки-обещания. Над сеткой городов. */}
+        <section className="mb-16">
+          <div className="mb-8">
+            <div className="text-xs uppercase tracking-[0.2em] text-gray-500 mb-2">
+              Зачем ехать
+            </div>
+            <h2
+              className="font-extrabold mb-3"
+              style={{
+                fontFamily: 'Georgia, "Times New Roman", serif',
+                fontSize: "clamp(28px, 4vw, 44px)",
+                color: "var(--dark)",
+              }}
+            >
+              По темам
+            </h2>
+            <p className="text-gray-600 max-w-2xl leading-relaxed">
+              Один регион — один сюжет: вино, башни, перевалы, баня, древние стены, море.
+              Выберите настроение — получите маршрут.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {[
+              {
+                href: "/routes/georgia-wine-kakheti",
+                emoji: "🍷",
+                title: "Винная Кахетия",
+                regions: "Сигнахи · Телави · Кварели · Алазани",
+                body: "8 000 лет виноделия, квеври, семейные погреба и закаты над долиной. Дегустации в Напареули и Цинандали, монастырь Бодбе и виноградники до горизонта.",
+                image: "https://scoute.app/media/cached_images/attraction_1747_ba8cb6dd93.jpg",
+                alt: "Кахетинская дорога — виноградники долины Алазани",
+              },
+              {
+                href: "/routes/georgia-svaneti",
+                emoji: "🥾",
+                title: "Трекинг по Кавказу",
+                regions: "Сванетия · Хевсуретия · Тушетия",
+                body: "Башни Ушгули и Местии, перевалы Чаухи и Загаро, заброшенные деревни Муцо и Шатили. Тропы выше облаков, ночёвки в гостевых домах со сванами.",
+                image: "https://scoute.app/media/cached_images/attraction_1643_850296af66.jpg",
+                alt: "Деревня Ушгули — самая высокогорная в Европе",
+              },
+              {
+                href: "/routes/georgia-kazbegi",
+                emoji: "🏔",
+                title: "К Казбеку",
+                regions: "Гудаури · Ананури · Гергети · Степанцминда",
+                body: "Военно-Грузинская дорога: крепость Ананури над бирюзовым водохранилищем, перевалы, Арка Дружбы и церковь Гергети на фоне снежного Казбека.",
+                image: "https://scoute.app/media/cached_images/attraction_1280_70151dedf3.jpg",
+                alt: "Ананури — крепость на Жинвальском водохранилище",
+              },
+              {
+                href: "/cities/tbilisi",
+                emoji: "🥘",
+                title: "Гастро Тбилиси",
+                regions: "Хинкали · Хачапури · Серные бани · Винные бары",
+                body: "Утро в Абанотубани, обед с хинкали в Старом городе, винотеки в подвалах, мцвади на углях у Метехи. Кухня и культура — один маршрут.",
+                image: "https://scoute.app/media/cached_images/attraction_1234_08e9bf41cb.jpg",
+                alt: "Абанотубани — серные бани Тбилиси",
+              },
+              {
+                href: "/routes/georgia-historical",
+                emoji: "🏛",
+                title: "Древности и фрески",
+                regions: "Мцхета · Уплисцихе · Кутаиси · Гелати",
+                body: "Пещерный город IV века до н. э., собор Светицховели — место хранения хитона Христа, монастыри Гелати и Баграти с фресками XII века.",
+                image: "https://scoute.app/media/cached_images/attraction_1262_d51f1a370e.jpg",
+                alt: "Уплисцихе — пещерный город",
+              },
+              {
+                href: "/routes/georgia-batumi-beach",
+                emoji: "🏖",
+                title: "Чёрное море",
+                regions: "Батуми · Гонио · Уреки · Кобулети",
+                body: "Бульвар Батуми с движущейся статуей «Али и Нино», ботанический сад над морем, магнитный песок Уреки, римская крепость Гонио.",
+                image: "https://scoute.app/media/cached_images/attraction_1657_5fbe70d98b.jpg",
+                alt: "Скульптура «Али и Нино» в Батуми",
+              },
+            ].map((t) => (
+              <Link
+                key={t.href + t.title}
+                href={t.href}
+                className="group block rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-xl transition-all"
+                style={{ border: "1px solid #E5E7EB" }}
+              >
+                <div className="relative aspect-[4/5] bg-gray-100 overflow-hidden">
+                  <Image
+                    src={t.image}
+                    alt={t.alt}
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    className="object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-x-0 bottom-0 h-3/5 bg-gradient-to-t from-black via-black/70 to-transparent" />
+                  <div className="absolute bottom-0 left-0 right-0 p-5 text-white">
+                    <div className="text-3xl mb-1">{t.emoji}</div>
+                    <div
+                      className="font-bold leading-tight mb-2"
+                      style={{
+                        fontFamily: 'Georgia, "Times New Roman", serif',
+                        fontSize: "clamp(20px, 2.4vw, 28px)",
+                      }}
+                    >
+                      {t.title}
+                    </div>
+                    <div className="text-xs uppercase tracking-wider mb-3" style={{ opacity: 0.85 }}>
+                      {t.regions}
+                    </div>
+                    <p className="text-sm leading-snug" style={{ opacity: 0.95 }}>
+                      {t.body}
+                    </p>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+
         {/* Cities */}
         <section id="cities" className="mb-20 scroll-mt-20">
           <div className="mb-8">
