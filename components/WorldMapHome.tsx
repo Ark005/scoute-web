@@ -5,6 +5,7 @@ import { MapContainer, TileLayer, useMap, useMapEvent } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import MapAttributionFix from "./MapAttributionFix";
+import TripPickerPanel from "./TripPickerPanel";
 
 // ── Cluster data ──────────────────────────────────────────────────────────────
 
@@ -282,26 +283,30 @@ export default function WorldMapHome() {
   }, []);
 
   return (
-    <div style={{ height: "calc(100vh - 56px)", width: "100%", position: "relative" }}>
-      <MapContainer
-        center={[40.0, 40.0]}
-        zoom={2.5}
-        minZoom={2.0}
-        maxZoom={8.0}
-        style={{ width: "100%", height: "100%" }}
-        zoomControl={false}
-        worldCopyJump={false}
-      >
-        <TileLayer
-          attribution='© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        <MapAttributionFix />
-        <MapLayers />
+    <div style={{ height: "calc(100vh - 56px)", width: "100%", display: "flex", flexDirection: "column" }}>
+      {/* Map — takes remaining height above panel */}
+      <div style={{ flex: 1, position: "relative", minHeight: 0 }}>
+        <MapContainer
+          center={[40.0, 40.0]}
+          zoom={2.5}
+          minZoom={2.0}
+          maxZoom={8.0}
+          style={{ width: "100%", height: "100%" }}
+          zoomControl={false}
+          worldCopyJump={false}
+        >
+          <TileLayer
+            attribution='© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+          <MapAttributionFix />
+          <MapLayers />
+          <ZoomButtons />
+        </MapContainer>
+      </div>
 
-        {/* Zoom controls — bottom right */}
-        <ZoomButtons />
-      </MapContainer>
+      {/* Trip picker panel — always visible at bottom */}
+      <TripPickerPanel />
     </div>
   );
 }
