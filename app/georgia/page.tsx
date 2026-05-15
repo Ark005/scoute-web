@@ -1,9 +1,10 @@
 import Link from "next/link";
 import Image from "next/image";
+import Script from "next/script";
 import type { Metadata } from "next";
 import { getRoutes, getCities, getCityPOIs, getCityBudgets } from "@/lib/api";
 import type { CityInfo, RouteListItem, CityPOI, CityBudget } from "@/lib/types";
-import { aviasalesUrl, localrentUrl } from "@/lib/transport";
+import { aviasalesUrl, localrentUrl, ostrovokUrl } from "@/lib/transport";
 import GeorgiaMapClient from "@/components/GeorgiaMapClient";
 import AffiliateDisclaimer from "@/components/AffiliateDisclaimer";
 import EventsCalendar from "@/components/EventsCalendar";
@@ -207,6 +208,7 @@ export default async function GeorgiaPage() {
 
   return (
     <>
+      <Script src="https://emrld.ltd/NTIxNzg0.js?t=521784" strategy="afterInteractive" />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -794,11 +796,11 @@ export default async function GeorgiaPage() {
                 </div>
                 <div className="flex flex-col items-stretch">
                   <a
-                    href="https://www.booking.com/searchresults.html?ss=Tbilisi%2C+Georgia"
+                    href={ostrovokUrl("Тбилиси")}
                     target="_blank"
                     rel="noopener sponsored"
                     className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold transition hover:scale-105"
-                    style={{ background: "#003B95", color: "white" }}
+                    style={{ background: "#E5174D", color: "white" }}
                   >
                     🏨 Найти отель
                   </a>

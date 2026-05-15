@@ -1,5 +1,6 @@
 import type React from "react";
 import Link from "next/link";
+import Script from "next/script";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import TripTimeline from "@/components/TripTimeline";
@@ -7,6 +8,7 @@ import EventsCalendar from "@/components/EventsCalendar";
 import AffiliateDisclaimer from "@/components/AffiliateDisclaimer";
 import TourBlock from "@/components/TourBlock";
 import { cityLabel, countryLabel } from "@/lib/labels";
+import { ostrovokUrl } from "@/lib/transport";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL || "https://scoute.app/api";
 
@@ -217,6 +219,8 @@ export default async function TripPage({
   }
 
   return (
+    <>
+    <Script src="https://emrld.ltd/NTIxNzg0.js?t=521784" strategy="afterInteractive" />
     <main className="max-w-3xl mx-auto px-4 py-6">
       <div className="mb-6">
         <Link
@@ -311,11 +315,11 @@ export default async function TripPage({
             🛫 Билеты в {countryLabel(trip.country_slug) || "путешествие"}
           </a>
           <a
-            href={`https://www.booking.com/searchresults.html?ss=${encodeURIComponent(cityLabel(trip.city_slug) || "Tbilisi")}`}
+            href={ostrovokUrl(cityLabel(trip.city_slug) || "Тбилиси")}
             target="_blank"
             rel="noopener sponsored"
             className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold text-white transition hover:scale-105"
-            style={{ background: "#003B95" }}
+            style={{ background: "#E5174D" }}
           >
             🏨 Отель {trip.city_slug ? `в ${cityLabel(trip.city_slug)}` : ""}
           </a>
@@ -345,5 +349,6 @@ export default async function TripPage({
         </div>
       </div>
     </main>
+    </>
   );
 }

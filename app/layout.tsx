@@ -30,10 +30,6 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full flex flex-col">
-        <Script
-          src="https://emrld.ltd/NTIxNzg0.js?t=521784"
-          strategy="beforeInteractive"
-        />
         <NavBar />
         {children}
         {/* Footer — 6+ маркер (436-ФЗ), Privacy ссылка */}
