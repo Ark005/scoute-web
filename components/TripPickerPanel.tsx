@@ -274,15 +274,59 @@ export default function TripPickerPanel({ initialCountrySlug }: { initialCountry
   const typeItems = TRIP_TYPES.map(t => `${t.emoji} ${t.label}`);
   const budgetItems = BUDGETS.map(b => `${b.emoji} ${b.label}`);
 
-  const handleSubmit = () => {
-    const c = COUNTRIES[countryIdx];
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async () => {
     const d = DAYS[daysIdx];
     const t = TRIP_TYPES[typeIdx].label;
     const b = BUDGETS[budgetIdx].label;
-    const params = new URLSearchParams({ country: c.name, days: String(d), type: t, budget: b });
-    if (startDate) params.set("from", startDate.toISOString().slice(0,10));
-    if (endDate) params.set("to", endDate.toISOString().slice(0,10));
-    router.push(`/autopilot?${params.toString()}`);
+    const citySlug = "tbilisi"; // Грузия → Тбилиси по умолчанию
+
+    setLoading(true);
+    setError(null);
+    try {
+      const BASE = process.env.NEXT_PUBLIC_API_URL || "https://scoute.app/api";
+
+      // 1. Построить программу
+      const r1 = await fetch(`${BASE}/agent/build-from-chat/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          city_slug: citySlug,
+          days: d,
+          must_see_names: [],
+          fill_with_must_see: true,
+          min_count: 5,
+        }),
+      });
+      if (!r1.ok) throw new Error(`build ${r1.status}`);
+      const program = await r1.json();
+
+      // 2. Сохранить как Trip
+      const r2 = await fetch(`${BASE}/trip/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: `Тбилиси — ${d} ${d === 1 ? "день" : d < 5 ? "дня" : "дн"}`,
+          country_slug: "georgia",
+          city_slug: citySlug,
+          program,
+          meta: { days: d, type: t, budget: b,
+            date_from: startDate?.toISOString().slice(0,10),
+            date_to: endDate?.toISOString().slice(0,10),
+          },
+          source: "drums",
+        }),
+      });
+      if (!r2.ok) throw new Error(`save ${r2.status}`);
+      const saved = await r2.json();
+
+      router.push(`/trip/${saved.id}`);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Ошибка");
+      setLoading(false);
+    }
   };
 
   return (
@@ -372,22 +416,25 @@ export default function TripPickerPanel({ initialCountrySlug }: { initialCountry
       </div>
 
       {/* CTA */}
+      {error && <div style={{ color: "#EF4444", fontSize: 12, textAlign: "center", marginTop: -4 }}>{error}</div>}
       <button
         onClick={handleSubmit}
+        disabled={loading}
         style={{
           width: "100%",
-          background: "#1B4DFF",
+          background: loading ? "#6B7280" : "#1B4DFF",
           color: "white",
           border: "none",
           borderRadius: 14,
           padding: "14px 0",
           fontSize: 15,
           fontWeight: 700,
-          cursor: "pointer",
+          cursor: loading ? "default" : "pointer",
           letterSpacing: 0.3,
+          transition: "background 0.2s",
         }}
       >
-        ✦ Составить маршрут
+        {loading ? "⏳ Составляем..." : "✦ Составить маршрут"}
       </button>
     </div>
   );
