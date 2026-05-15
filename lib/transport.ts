@@ -123,3 +123,10 @@ export function tutuUrl(city: string): string {
 export function localrentUrl(country: string): string {
   return `https://www.localrent.com/${country}`;
 }
+
+// Поиск отелей на Ostrovok.ru. Сырая ссылка — Travelpayouts Drive
+// (скрипт в app/layout.tsx) перепишет домен на emrld.ltd?erid=...
+// в рантайме. cityName — русское/английское имя как в CITIES.name.
+export function ostrovokUrl(cityName: string): string {
+  return `https://ostrovok.ru/hotel/search/?q=${encodeURIComponent(cityName)}`;
+}
