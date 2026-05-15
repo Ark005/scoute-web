@@ -269,7 +269,7 @@ export default async function TripPage({
       </div>
 
       {/* Kanban board — drag-drop cards between days */}
-      {days.length > 0 && <TripKanban days={days as any} />}
+      {days.length > 0 && <TripKanban days={days as any} citySlug={trip.city_slug} />}
 
       {/* Program by days — interactive timeline */}
       {days.length > 0 && (
