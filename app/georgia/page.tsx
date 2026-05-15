@@ -796,7 +796,6 @@ export default async function GeorgiaPage() {
                   >
                     🛫 Найти билеты
                   </a>
-                  <AffiliateDisclaimer />
                 </div>
                 <div className="flex flex-col items-stretch">
                   <a
@@ -808,7 +807,6 @@ export default async function GeorgiaPage() {
                   >
                     🏨 Найти отель
                   </a>
-                  <AffiliateDisclaimer />
                 </div>
                 <div className="flex flex-col items-stretch">
                   <a
@@ -820,7 +818,6 @@ export default async function GeorgiaPage() {
                   >
                     🚗 Арендовать машину
                   </a>
-                  <AffiliateDisclaimer />
                 </div>
                 <div className="flex flex-col items-stretch">
                   <a
@@ -832,7 +829,6 @@ export default async function GeorgiaPage() {
                   >
                     🎫 Экскурсии
                   </a>
-                  <AffiliateDisclaimer />
                 </div>
               </div>
               <div className="text-center text-xs text-gray-500">

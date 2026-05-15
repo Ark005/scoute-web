@@ -62,6 +62,9 @@ export default function RootLayout({
               </a>
             </div>
           </div>
+          <div className="max-w-screen-xl mx-auto mt-3 text-[10px]" style={{ color: "rgba(255,255,255,0.35)" }}>
+            Реклама. Go Travel Un Limited, ИНН: 9909520797. ООО «Бронирование гостиниц», ИНН: 7703389880.
+          </div>
         </footer>
       </body>
     </html>

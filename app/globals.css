@@ -1,5 +1,12 @@
 @import "tailwindcss";
 
+/* Скрыть автоматические рекламные баннеры от Travelpayouts emrld.ltd Drive */
+.tp-advertiser-info,
+[class*="tp-advertiser"],
+[id*="tp-advertiser"] {
+  display: none !important;
+}
+
 :root {
   --dark: #111827;
   --grey: #6B7280;
