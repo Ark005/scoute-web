@@ -8,6 +8,7 @@ import { aviasalesUrl, localrentUrl, ostrovokUrl } from "@/lib/transport";
 import GeorgiaMapClient from "@/components/GeorgiaMapClient";
 import AffiliateDisclaimer from "@/components/AffiliateDisclaimer";
 import EventsCalendar from "@/components/EventsCalendar";
+import GeorgiaDrumPicker from "@/components/GeorgiaDrumPicker";
 
 export const revalidate = 3600;
 
@@ -283,6 +284,9 @@ export default async function GeorgiaPage() {
       <section className="border-y" style={{ borderColor: "#E5E7EB" }}>
         <GeorgiaMapClient />
       </section>
+
+      {/* Drum picker — экскурсии / музеи / события */}
+      <GeorgiaDrumPicker />
 
       <main className="max-w-screen-xl mx-auto px-4 py-12">
         {/* Stats */}
