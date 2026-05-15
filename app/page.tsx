@@ -1,9 +1,9 @@
-import { getRoutes } from "@/lib/api";
-import HomeExplore from "@/components/HomeExplore";
+"use client";
 
-export const dynamic = "force-dynamic";
+import dynamic from "next/dynamic";
 
-export default async function HomePage() {
-  const routes = await getRoutes().catch(() => []);
-  return <HomeExplore routes={routes} />;
+const WorldMapHome = dynamic(() => import("@/components/WorldMapHome"), { ssr: false });
+
+export default function HomePage() {
+  return <WorldMapHome />;
 }
