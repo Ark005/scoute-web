@@ -6,28 +6,10 @@ import { useRouter } from "next/navigation";
 // ── Data ──────────────────────────────────────────────────────────────────────
 
 const COUNTRIES = [
-  { flag: "🇬🇪", name: "Грузия",        slug: "georgia" },
-  { flag: "🇷🇺", name: "Россия",         slug: "russia" },
-  { flag: "🇹🇷", name: "Турция",         slug: "turkey" },
-  { flag: "🇦🇲", name: "Армения",        slug: "armenia" },
-  { flag: "🇦🇿", name: "Азербайджан",    slug: "azerbaijan" },
-  { flag: "🇺🇿", name: "Узбекистан",     slug: "uzbekistan" },
-  { flag: "🇰🇿", name: "Казахстан",      slug: "kazakhstan" },
-  { flag: "🇰🇬", name: "Кыргызстан",     slug: "kyrgyzstan" },
-  { flag: "🇮🇱", name: "Израиль",        slug: "israel" },
-  { flag: "🇦🇪", name: "ОАЭ",           slug: "uae" },
-  { flag: "🇫🇷", name: "Франция",        slug: "france" },
-  { flag: "🇮🇹", name: "Италия",         slug: "italy" },
-  { flag: "🇩🇪", name: "Германия",       slug: "germany" },
-  { flag: "🇪🇸", name: "Испания",        slug: "spain" },
-  { flag: "🇦🇹", name: "Австрия",        slug: "austria" },
-  { flag: "🇬🇷", name: "Греция",         slug: "greece" },
-  { flag: "🇯🇵", name: "Япония",         slug: "japan" },
-  { flag: "🇹🇭", name: "Таиланд",        slug: "thailand" },
-  { flag: "🇮🇳", name: "Индия",          slug: "india" },
+  { flag: "🇬🇪", name: "Грузия", slug: "georgia" },
 ];
 
-const DAYS = [3, 5, 7, 10, 14, 21];
+const DAYS = [1, 2, 3, 5, 7, 10, 14];
 
 const TRIP_TYPES = [
   { emoji: "🏖", label: "Пляж" },
