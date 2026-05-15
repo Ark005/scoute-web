@@ -63,90 +63,88 @@ function Drum({
   flex?: number;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const timer = useRef<any>(null);
-  const inner = selectedIndex;
+  // Top/bottom spacer = (containerHeight - itemHeight) / 2
+  const SPACER = (ITEM_H * VISIBLE - ITEM_H) / 2; // 40px
 
-  // Init scroll position
+  // Scroll to initial item on mount
   useEffect(() => {
-    if (ref.current) {
-      ref.current.scrollTop = inner * ITEM_H;
-    }
+    const el = ref.current;
+    if (!el) return;
+    el.scrollTop = selectedIndex * ITEM_H;
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const onScroll = useCallback(() => {
-    clearTimeout(timer.current);
-    timer.current = setTimeout(() => {
-      if (!ref.current) return;
-      const raw = ref.current.scrollTop / ITEM_H;
-      const idx = Math.round(raw);
-      const clamped = Math.max(0, Math.min(idx, items.length - 1));
-      ref.current.scrollTop = clamped * ITEM_H;
-      onChange(clamped);
-    }, 80);
+  // scrollend fires after inertia stops — most reliable snap detection
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const onEnd = () => {
+      const idx = Math.max(0, Math.min(Math.round(el.scrollTop / ITEM_H), items.length - 1));
+      onChange(idx);
+    };
+    el.addEventListener("scrollend", onEnd);
+    // Fallback for browsers without scrollend (debounce)
+    let t: ReturnType<typeof setTimeout>;
+    const onScroll = () => {
+      clearTimeout(t);
+      t = setTimeout(onEnd, 150);
+    };
+    el.addEventListener("scroll", onScroll);
+    return () => {
+      el.removeEventListener("scrollend", onEnd);
+      el.removeEventListener("scroll", onScroll);
+    };
   }, [items.length, onChange]);
 
+  const scrollTo = (i: number) => {
+    ref.current?.scrollTo({ top: i * ITEM_H, behavior: "smooth" });
+  };
+
   return (
-    <div
-      style={{
-        flex,
-        position: "relative",
-        overflow: "hidden",
-      }}
-    >
-      {/* Top + bottom fade */}
-      <div style={{
-        position: "absolute", top: 0, left: 0, right: 0, height: ITEM_H,
-        background: "linear-gradient(to bottom, rgba(255,255,255,0.95), transparent)",
-        zIndex: 2, pointerEvents: "none",
-      }} />
-      <div style={{
-        position: "absolute", bottom: 0, left: 0, right: 0, height: ITEM_H,
-        background: "linear-gradient(to top, rgba(255,255,255,0.95), transparent)",
-        zIndex: 2, pointerEvents: "none",
-      }} />
+    <div style={{ flex, position: "relative", overflow: "hidden" }}>
+      {/* Fades */}
+      <div style={{ position:"absolute", top:0, left:0, right:0, height:SPACER,
+        background:"linear-gradient(to bottom,rgba(255,255,255,1),rgba(255,255,255,0))",
+        zIndex:2, pointerEvents:"none" }} />
+      <div style={{ position:"absolute", bottom:0, left:0, right:0, height:SPACER,
+        background:"linear-gradient(to top,rgba(255,255,255,1),rgba(255,255,255,0))",
+        zIndex:2, pointerEvents:"none" }} />
 
       {/* Selection lane */}
       <div style={{
-        position: "absolute",
-        top: "50%", left: 4, right: 4,
-        height: ITEM_H,
-        transform: "translateY(-50%)",
-        borderTop: "1px solid rgba(255,107,27,0.4)",
-        borderBottom: "1px solid rgba(255,107,27,0.4)",
-        borderRadius: 8,
-        zIndex: 1, pointerEvents: "none",
+        position:"absolute", top:"50%", left:4, right:4, height:ITEM_H,
+        transform:"translateY(-50%)",
+        borderTop:"1px solid rgba(255,107,27,0.45)",
+        borderBottom:"1px solid rgba(255,107,27,0.45)",
+        borderRadius:8, zIndex:1, pointerEvents:"none",
       }} />
 
-      {/* Scroll area */}
+      {/* Scroll container — CSS snap */}
       <div
         ref={ref}
-        onScroll={onScroll}
         style={{
           height: ITEM_H * VISIBLE,
           overflowY: "scroll",
+          scrollSnapType: "y mandatory",
           scrollbarWidth: "none",
-          paddingTop: ITEM_H,
-          paddingBottom: ITEM_H,
-          boxSizing: "content-box",
-        }}
+          WebkitOverflowScrolling: "touch",
+        } as React.CSSProperties}
       >
+        {/* Top spacer so first item can center */}
+        <div style={{ height: SPACER, scrollSnapAlign: "none", flexShrink: 0 }} />
+
         {items.map((item, i) => (
           <div
             key={i}
-            onClick={() => {
-              if (ref.current) ref.current.scrollTop = i * ITEM_H;
-              onChange(i);
-            }}
+            onClick={() => scrollTo(i)}
             style={{
               height: ITEM_H,
+              scrollSnapAlign: "center",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               cursor: "pointer",
               userSelect: "none",
-              transition: "color 0.12s, font-size 0.12s",
               fontSize: i === selectedIndex ? 13 : 11,
               fontWeight: i === selectedIndex ? 700 : 400,
               color: i === selectedIndex ? "#111827" : "#9CA3AF",
@@ -154,11 +152,15 @@ function Drum({
               overflow: "hidden",
               textOverflow: "ellipsis",
               padding: "0 8px",
+              transition: "color 0.1s",
             }}
           >
             {item}
           </div>
         ))}
+
+        {/* Bottom spacer so last item can center */}
+        <div style={{ height: SPACER, scrollSnapAlign: "none", flexShrink: 0 }} />
       </div>
     </div>
   );
