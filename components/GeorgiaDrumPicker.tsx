@@ -6,7 +6,20 @@ import { useRouter } from "next/navigation";
 const ITEM_H = 44;
 const VISIBLE = 3;
 
-interface PoiItem { id: number; name: string; category: string; rating?: number; event_date?: string; }
+interface PoiItem { id: number; name: string; category: string; rating?: number; event_date?: string; event_type?: string; }
+
+// Слова, которые означают «бизнес/наука/спорт» — не для туриста
+const EVENT_BLOCKLIST = [
+  /конгресс/i, /конференц/i, /симпозиум/i, /саммит/i, /форум/i, /съезд/i,
+  /семинар/i, /тренинг/i, /мастер[- ]?класс.*бизнес/i, /собрание/i,
+  /турнир/i, /чемпионат/i, /лига/i, /кубок/i, /матч/i, /этап/i, /тур\b/i, /раунд/i,
+  /лекция/i, /научно/i, /акадeмическ/i, /исследовани/i,
+  /дерматолог/i, /хирург/i, /стоматолог/i, /медицин/i, /клиник/i,
+  /банковск/i, /финанс/i, /инвестиц/i, /пирамид/i, /trading/i,
+  /\bии\b/i, /\bai\b/i, /искусственн.*интеллект/i, /модернизац/i,
+  /абитуриент/i, /карьер/i, /образовани/i, /выпускник/i,
+  /устойчив.*развит/i,
+];
 
 // ── Drum ──────────────────────────────────────────────────────────────────────
 
@@ -109,6 +122,7 @@ export default function GeorgiaDrumPicker() {
         const evtItems: PoiItem[] = d.events || [];
         const upcoming = evtItems
           .filter(e => e.event_date && e.event_date >= today)
+          .filter(e => !EVENT_BLOCKLIST.some(rx => rx.test(e.name)))
           .slice(0, 20)
           .map(e => {
             const date = e.event_date
