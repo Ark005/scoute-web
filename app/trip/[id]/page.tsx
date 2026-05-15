@@ -327,9 +327,6 @@ export default async function TripPage({
         <AffiliateDisclaimer />
       </div>
 
-      {/* Туры-партнёры под город — конкретные экскурсии вместо общего поиска GYG */}
-      {trip.city_slug && <TourBlock citySlug={trip.city_slug} />}
-
       {/* Share */}
       <div
         className="rounded-2xl border p-5"

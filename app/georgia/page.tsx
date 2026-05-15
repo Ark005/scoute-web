@@ -280,13 +280,13 @@ export default async function GeorgiaPage() {
         </div>
       </section>
 
+      {/* Drum picker — экскурсии / музеи / события */}
+      <GeorgiaDrumPicker />
+
       {/* MAP — country regions */}
       <section className="border-y" style={{ borderColor: "#E5E7EB" }}>
         <GeorgiaMapClient />
       </section>
-
-      {/* Drum picker — экскурсии / музеи / события */}
-      <GeorgiaDrumPicker />
 
       <main className="max-w-screen-xl mx-auto px-4 py-12">
         {/* Stats */}
