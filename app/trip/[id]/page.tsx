@@ -324,7 +324,6 @@ export default async function TripPage({
             🏨 Отель {trip.city_slug ? `в ${cityLabel(trip.city_slug)}` : ""}
           </a>
         </div>
-        <AffiliateDisclaimer />
       </div>
 
       {/* Share */}
