@@ -6,7 +6,19 @@ import { useRouter } from "next/navigation";
 const ITEM_H = 44;
 const VISIBLE = 3;
 
-interface PoiItem { id: number; name: string; category: string; rating?: number; event_date?: string; event_type?: string; }
+interface PoiItem {
+  id: number;
+  name: string;
+  category: string;
+  rating?: number;
+  event_date?: string;
+  event_type?: string;
+  event_time?: string | null;
+  image_url?: string;
+  ticket_url?: string;
+  latitude?: number;
+  longitude?: number;
+}
 
 // Слова, которые означают «бизнес/наука/спорт» — не для туриста
 const EVENT_BLOCKLIST = [
@@ -96,6 +108,7 @@ export default function GeorgiaDrumPicker() {
   const [excursions, setExcursions] = useState<string[]>(["загрузка..."]);
   const [museums, setMuseums] = useState<string[]>(["загрузка..."]);
   const [events, setEvents] = useState<string[]>(["загрузка..."]);
+  const [eventObjs, setEventObjs] = useState<PoiItem[]>([]);
   const [excIdx, setExcIdx] = useState(0);
   const [musIdx, setMusIdx] = useState(0);
   const [evtIdx, setEvtIdx] = useState(0);
@@ -120,20 +133,26 @@ export default function GeorgiaDrumPicker() {
           .sort((a, b) => (b.rating || 0) - (a.rating || 0))
           .map(a => a.name);
         const evtItems: PoiItem[] = d.events || [];
-        const upcoming = evtItems
-          .filter(e => e.event_date && e.event_date >= today)
+        const ninetyDaysISO = new Date(Date.now() + 90 * 86400000).toISOString().slice(0, 10);
+        const upcomingObjs = evtItems
+          .filter(e => e.event_date && e.event_date >= today && e.event_date <= ninetyDaysISO)
           .filter(e => !EVENT_BLOCKLIST.some(rx => rx.test(e.name)))
-          .slice(0, 20)
-          .map(e => {
-            const date = e.event_date
-              ? new Date(e.event_date).toLocaleDateString("ru-RU", { day: "numeric", month: "short" })
-              : "";
-            return date ? `${e.name} · ${date}` : e.name;
-          });
+          .sort((a, b) => (a.event_date || "").localeCompare(b.event_date || ""))
+          .slice(0, 20);
+        const upcoming = upcomingObjs.map(e => {
+          const date = e.event_date
+            ? new Date(e.event_date).toLocaleDateString("ru-RU", { day: "numeric", month: "short" })
+            : "";
+          return date ? `${e.name} · ${date}` : e.name;
+        });
 
         if (exc.length) { setExcursions(exc); setExcIdx(0); }
         if (mus.length) { setMuseums(mus); setMusIdx(0); }
-        if (upcoming.length) { setEvents(upcoming); setEvtIdx(0); }
+        if (upcoming.length) {
+          setEvents(upcoming);
+          setEventObjs(upcomingObjs);
+          setEvtIdx(0);
+        }
       } catch { /* silent */ }
     }
     load();
@@ -145,26 +164,53 @@ export default function GeorgiaDrumPicker() {
       museums[musIdx] !== "загрузка..." ? museums[musIdx] : null,
     ].filter(Boolean).map(s => s!.split(" · ")[0].trim());
 
+    const selectedEvent = eventObjs[evtIdx] || null;
+    const tripDays = 3;
+
     setLoading(true);
     setError(null);
     try {
       const r1 = await fetch("/api/agent/build-from-chat/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ city_slug: "tbilisi", days: 3, must_see_names: mustSee, fill_with_must_see: true, min_count: 5 }),
+        body: JSON.stringify({ city_slug: "tbilisi", days: tripDays, must_see_names: mustSee, fill_with_must_see: true, min_count: 5 }),
       });
       if (!r1.ok) throw new Error(`build ${r1.status}`);
       const program = await r1.json();
+
+      // Insert event into the matching day (or day 1 if outside trip window)
+      if (selectedEvent && selectedEvent.event_date && Array.isArray(program?.days)) {
+        const today = new Date(); today.setHours(0, 0, 0, 0);
+        const eventDate = new Date(selectedEvent.event_date); eventDate.setHours(0, 0, 0, 0);
+        const diffDays = Math.round((eventDate.getTime() - today.getTime()) / 86400000);
+        const dayIdx = diffDays >= 0 && diffDays < tripDays ? diffDays : 0;
+        const targetDay = program.days[dayIdx];
+        if (targetDay && Array.isArray(targetDay.slots)) {
+          targetDay.slots.push({
+            type: "attraction",
+            time: selectedEvent.event_time || "19:00",
+            name: selectedEvent.name,
+            description: `Событие · ${new Date(selectedEvent.event_date).toLocaleDateString("ru-RU", { day: "numeric", month: "long" })}`,
+            image_url: selectedEvent.image_url,
+            latitude: selectedEvent.latitude,
+            longitude: selectedEvent.longitude,
+            duration_min: 120,
+            event_id: selectedEvent.id,
+            ticket_url: selectedEvent.ticket_url,
+            is_event: true,
+          });
+        }
+      }
 
       const r2 = await fetch("/api/trip/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          title: "Тбилиси — 3 дня",
+          title: `Тбилиси — ${tripDays} дня`,
           country_slug: "georgia",
           city_slug: "tbilisi",
           program,
-          meta: {},
+          meta: { event_id: selectedEvent?.id },
           source: "georgia_drums",
         }),
       });
