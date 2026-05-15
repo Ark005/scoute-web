@@ -226,6 +226,10 @@ function MonthGrid({
   );
 }
 
+// ── Types ─────────────────────────────────────────────────────────────────────
+
+interface PoiItem { id: number; name: string; category: string; rating?: number; event_date?: string; }
+
 // ── Main panel ────────────────────────────────────────────────────────────────
 
 export default function TripPickerPanel({ initialCountrySlug }: { initialCountrySlug?: string }) {
@@ -239,6 +243,56 @@ export default function TripPickerPanel({ initialCountrySlug }: { initialCountry
   const [daysIdx, setDaysIdx] = useState(2); // 7 days default
   const [typeIdx, setTypeIdx] = useState(0);
   const [budgetIdx, setBudgetIdx] = useState(1);
+
+  // Right drums data
+  const [excursions, setExcursions] = useState<string[]>(["загрузка..."]);
+  const [museums, setMuseums] = useState<string[]>(["загрузка..."]);
+  const [events, setEvents] = useState<string[]>(["загрузка..."]);
+  const [excIdx, setExcIdx] = useState(0);
+  const [musIdx, setMusIdx] = useState(0);
+  const [evtIdx, setEvtIdx] = useState(0);
+
+  // Fetch city POI data when country changes
+  const fetchCityData = useCallback(async (citySlug: string) => {
+    try {
+      const res = await fetch(`/api/city-pois/?city=${citySlug}`);
+      if (!res.ok) return;
+      const d = await res.json();
+      const attrs: PoiItem[] = d.attractions || [];
+      const today = new Date().toISOString().slice(0, 10);
+
+      const exc = attrs
+        .filter(a => ["culture", "history", "architecture"].includes(a.category))
+        .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+        .map(a => a.name.length > 22 ? a.name.slice(0, 21) + "…" : a.name);
+
+      const mus = attrs
+        .filter(a => a.category === "museums")
+        .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+        .map(a => a.name.length > 22 ? a.name.slice(0, 21) + "…" : a.name);
+
+      const evtItems: PoiItem[] = d.events || [];
+      const upcoming = evtItems
+        .filter(e => e.event_date && e.event_date >= today)
+        .slice(0, 20)
+        .map(e => {
+          const label = e.name.length > 18 ? e.name.slice(0, 17) + "…" : e.name;
+          const date = e.event_date ? new Date(e.event_date).toLocaleDateString("ru-RU", { day: "numeric", month: "short" }) : "";
+          return `${label} · ${date}`;
+        });
+
+      if (exc.length) setExcursions(exc);
+      if (mus.length) setMuseums(mus);
+      if (upcoming.length) setEvents(upcoming);
+      setExcIdx(0); setMusIdx(0); setEvtIdx(0);
+    } catch (_) { /* silent */ }
+  }, []);
+
+  useEffect(() => {
+    const slug = COUNTRIES[countryIdx]?.slug || "georgia";
+    const citySlug = slug === "georgia" ? "tbilisi" : slug;
+    fetchCityData(citySlug);
+  }, [countryIdx, fetchCityData]);
 
   // Calendar
   const now = new Date();
@@ -288,6 +342,12 @@ export default function TripPickerPanel({ initialCountrySlug }: { initialCountry
     try {
       const BASE = "/api";
 
+      // Collect selected right drum items (strip date suffix)
+      const mustSeeRaw = [
+        excursions[excIdx] !== "загрузка..." ? excursions[excIdx] : null,
+        museums[musIdx] !== "загрузка..." ? museums[musIdx] : null,
+      ].filter(Boolean).map(s => s!.replace(/…$/, "").trim());
+
       // 1. Построить программу
       const r1 = await fetch(`${BASE}/agent/build-from-chat/`, {
         method: "POST",
@@ -295,7 +355,7 @@ export default function TripPickerPanel({ initialCountrySlug }: { initialCountry
         body: JSON.stringify({
           city_slug: citySlug,
           days: d,
-          must_see_names: [],
+          must_see_names: mustSeeRaw,
           fill_with_must_see: true,
           min_count: 5,
         }),
@@ -379,6 +439,59 @@ export default function TripPickerPanel({ initialCountrySlug }: { initialCountry
             <Drum items={typeItems} selectedIndex={typeIdx} onChange={setTypeIdx} flex={3} />
             <div style={{ width: 1, background: "#F3F4F6", flexShrink: 0 }} />
             <Drum items={budgetItems} selectedIndex={budgetIdx} onChange={setBudgetIdx} flex={2} />
+          </div>
+        </div>
+
+        {/* Divider */}
+        <div style={{ width: 1, background: "#F3F4F6", alignSelf: "stretch", flexShrink: 0 }} />
+
+        {/* Right drums: Экскурсии / Музеи / События */}
+        <div style={{ flex: "0 0 auto", display: "flex", flexDirection: "column", gap: 4 }}>
+          {/* Labels */}
+          <div style={{ display: "flex", gap: 0 }}>
+            {[
+              { label: "Экскурсии", flex: 1 },
+              { label: "Музеи", flex: 1 },
+              { label: "События", flex: 1 },
+            ].map(({ label, flex }) => (
+              <div key={label} style={{
+                flex, textAlign: "center",
+                fontSize: 10, fontWeight: 600,
+                color: "#9CA3AF", letterSpacing: 0.5,
+                textTransform: "uppercase",
+              }}>
+                {label}
+              </div>
+            ))}
+          </div>
+
+          {/* Drums row */}
+          <div style={{
+            display: "flex",
+            height: ITEM_H * VISIBLE,
+            border: "1px solid #F3F4F6",
+            borderRadius: 14,
+            overflow: "hidden",
+            background: "white",
+            width: 300,
+          }}>
+            <Drum items={excursions} selectedIndex={excIdx} onChange={setExcIdx} flex={1} />
+            <div style={{ width: 1, background: "#F3F4F6", flexShrink: 0 }} />
+            <Drum items={museums} selectedIndex={musIdx} onChange={setMusIdx} flex={1} />
+            <div style={{ width: 1, background: "#F3F4F6", flexShrink: 0 }} />
+            <Drum items={events} selectedIndex={evtIdx} onChange={setEvtIdx} flex={1} />
+          </div>
+
+          {/* Аудиогид badge */}
+          <div style={{ display: "flex", justifyContent: "center", marginTop: 2 }}>
+            <div style={{
+              display: "inline-flex", alignItems: "center", gap: 5,
+              background: "#F0FDF4", border: "1px solid #BBF7D0",
+              borderRadius: 20, padding: "3px 10px",
+            }}>
+              <span style={{ fontSize: 13 }}>🎧</span>
+              <span style={{ fontSize: 11, fontWeight: 600, color: "#15803D" }}>Аудиогид — бесплатно</span>
+            </div>
           </div>
         </div>
 
