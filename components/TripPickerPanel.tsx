@@ -286,7 +286,7 @@ export default function TripPickerPanel({ initialCountrySlug }: { initialCountry
     setLoading(true);
     setError(null);
     try {
-      const BASE = process.env.NEXT_PUBLIC_API_URL || "https://scoute.app/api";
+      const BASE = "/api";
 
       // 1. Построить программу
       const r1 = await fetch(`${BASE}/agent/build-from-chat/`, {
