@@ -1,7 +1,21 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+
+// Тип отдыха → город (Грузия)
+function citySlugForType(type: string): { slug: string; label: string } {
+  switch (type) {
+    case "Пляж": return { slug: "batumi", label: "Батуми" };
+    case "Горнолыжка": return { slug: "gudauri", label: "Гудаури" };
+    case "Трекинг": return { slug: "kazbegi", label: "Казбеги" };
+    case "Автотур": return { slug: "tbilisi", label: "Тбилиси" };
+    case "Экскурсии":
+    case "Городской":
+    case "Активный":
+    default: return { slug: "tbilisi", label: "Тбилиси" };
+  }
+}
 
 export default function GeorgiaPlanCTA() {
   const router = useRouter();
@@ -15,12 +29,12 @@ export default function GeorgiaPlanCTA() {
   const from = params.get("from") || "";
   const to = params.get("to") || "";
   const hasParams = params.has("days") || params.has("type");
+  const { slug: citySlug, label: cityLabel } = citySlugForType(type);
 
   const handleClick = async () => {
     setLoading(true);
     setError(null);
     try {
-      const citySlug = "tbilisi";
       const r1 = await fetch("/api/agent/build-from-chat/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -39,7 +53,7 @@ export default function GeorgiaPlanCTA() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          title: `Тбилиси — ${days} ${days === 1 ? "день" : days < 5 ? "дня" : "дн"}`,
+          title: `${cityLabel} — ${days} ${days === 1 ? "день" : days < 5 ? "дня" : "дн"}`,
           country_slug: "georgia",
           city_slug: citySlug,
           program,
@@ -66,8 +80,8 @@ export default function GeorgiaPlanCTA() {
             </h2>
             <p style={{ fontSize: 14, color: "#6B7280", marginTop: 6, marginBottom: 0 }}>
               {hasParams
-                ? `${days} ${days === 1 ? "день" : days < 5 ? "дня" : "дней"} в Тбилиси${type ? ` · ${type}` : ""}${budget ? ` · ${budget}` : ""}`
-                : "Соберём маршрут по Тбилиси за минуту — после можно править на доске"}
+                ? `${days} ${days === 1 ? "день" : days < 5 ? "дня" : "дней"} в ${cityLabel}${type ? ` · ${type}` : ""}${budget ? ` · ${budget}` : ""}`
+                : `Соберём маршрут по ${cityLabel} за минуту — после можно править на доске`}
             </p>
             {error && <div style={{ color: "#EF4444", fontSize: 12, marginTop: 6 }}>{error}</div>}
           </div>
