@@ -1,5 +1,4 @@
 import { getRoutes, getCities, getCityPOIsFromAPI } from "@/lib/api";
-import { getAllGuides } from "@/lib/guides";
 import type { MetadataRoute } from "next";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -48,12 +47,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly" as const,
       priority: 0.8,
     })),
-    ...getAllGuides().map((g) => ({
-      url: `https://next.scoute.app/guide/${g.slug}`,
-      lastModified: new Date(g.updatedAt),
-      changeFrequency: "monthly" as const,
-      priority: 0.9,
-    })),
+    // guides пока не индексируем — вернутся в sitemap после явного разрешения пользователя (дедлайн 26 мая, чистка /georgia)
     ...poiEntries,
   ];
 }
