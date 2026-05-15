@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import TripTimeline from "@/components/TripTimeline";
 import EventsCalendar from "@/components/EventsCalendar";
+import TripKanban from "@/components/TripKanban";
 import AffiliateDisclaimer from "@/components/AffiliateDisclaimer";
 import TourBlock from "@/components/TourBlock";
 import { cityLabel, countryLabel } from "@/lib/labels";
@@ -267,6 +268,9 @@ export default async function TripPage({
         </div>
       </div>
 
+      {/* Kanban board — drag-drop cards between days */}
+      {days.length > 0 && <TripKanban days={days as any} />}
+
       {/* Program by days — interactive timeline */}
       {days.length > 0 && (
         <section className="mb-8">
@@ -281,22 +285,6 @@ export default async function TripPage({
             restaurantAlts={restaurantAlts}
           />
         </section>
-      )}
-
-      {/* Events for trip dates */}
-      {events.length > 0 && (
-        <EventsCalendar
-          events={events}
-          title={tripDates.from ? "Что в эти дни в Тбилиси" : "Афиша Тбилиси"}
-          subtitle={
-            tripDates.from
-              ? "Концерты, спектакли, фестивали — добавьте в маршрут одной кнопкой."
-              : "Концерты, спектакли, фестивали. Добавьте в маршрут одной кнопкой."
-          }
-          dateFrom={tripDates.from}
-          dateTo={tripDates.to}
-          limit={tripDates.from ? 24 : 8}
-        />
       )}
 
       {/* Buy CTAs */}
