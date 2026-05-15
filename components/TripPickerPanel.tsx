@@ -28,6 +28,16 @@ const BUDGETS = [
   { emoji: "👑", label: "Премиум" },
 ];
 
+// Тип отдыха → город (Грузия)
+function citySlugForType(type: string): { slug: string; label: string } {
+  switch (type) {
+    case "Пляж": return { slug: "batumi", label: "Батуми" };
+    case "Горнолыжка": return { slug: "gudauri", label: "Гудаури" };
+    case "Трекинг": return { slug: "kazbegi", label: "Казбеги" };
+    default: return { slug: "tbilisi", label: "Тбилиси" };
+  }
+}
+
 const ITEM_H = 40;
 const VISIBLE = 3;
 
@@ -278,19 +288,52 @@ export default function TripPickerPanel({ initialCountrySlug }: { initialCountry
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const d = DAYS[daysIdx];
     const t = TRIP_TYPES[typeIdx].label;
     const b = BUDGETS[budgetIdx].label;
-    const params = new URLSearchParams({
-      days: String(d),
-      type: t,
-      budget: b,
-    });
-    if (startDate) params.set("from", startDate.toISOString().slice(0, 10));
-    if (endDate) params.set("to", endDate.toISOString().slice(0, 10));
+    const { slug: citySlug, label: cityLabel } = citySlugForType(t);
+
     setLoading(true);
-    router.push(`/georgia?${params.toString()}`);
+    setError(null);
+    try {
+      const r1 = await fetch("/api/agent/build-from-chat/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          city_slug: citySlug,
+          days: d,
+          must_see_names: [],
+          fill_with_must_see: true,
+          min_count: 5,
+        }),
+      });
+      if (!r1.ok) throw new Error(`build ${r1.status}`);
+      const program = await r1.json();
+
+      const r2 = await fetch("/api/trip/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: `${cityLabel} — ${d} ${d === 1 ? "день" : d < 5 ? "дня" : "дн"}`,
+          country_slug: "georgia",
+          city_slug: citySlug,
+          program,
+          meta: {
+            days: d, type: t, budget: b,
+            date_from: startDate?.toISOString().slice(0, 10),
+            date_to: endDate?.toISOString().slice(0, 10),
+          },
+          source: "drums",
+        }),
+      });
+      if (!r2.ok) throw new Error(`save ${r2.status}`);
+      const saved = await r2.json();
+      router.push(`/trip/${saved.id}`);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Ошибка");
+      setLoading(false);
+    }
   };
 
   return (

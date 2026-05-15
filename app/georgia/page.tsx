@@ -8,8 +8,6 @@ import { aviasalesUrl, localrentUrl, ostrovokUrl } from "@/lib/transport";
 import GeorgiaMapClient from "@/components/GeorgiaMapClient";
 import AffiliateDisclaimer from "@/components/AffiliateDisclaimer";
 import EventsCalendar from "@/components/EventsCalendar";
-import GeorgiaPlanCTA from "@/components/GeorgiaPlanCTA";
-import { Suspense } from "react";
 
 export const revalidate = 3600;
 
@@ -280,11 +278,6 @@ export default async function GeorgiaPage() {
           </div>
         </div>
       </section>
-
-      {/* CTA: Спланировать маршрут (picks up URL params from main page drums) */}
-      <Suspense fallback={null}>
-        <GeorgiaPlanCTA />
-      </Suspense>
 
       {/* MAP — country regions */}
       <section className="border-y" style={{ borderColor: "#E5E7EB" }}>
