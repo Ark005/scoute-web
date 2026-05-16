@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Script from "next/script";
 import "./globals.css";
 import NavBar from "@/components/NavBar";
+import CookieBanner from "@/components/CookieBanner";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://scoute.app"),
@@ -32,6 +33,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <NavBar />
         {children}
+        <CookieBanner />
         {/* Footer — 6+ маркер (436-ФЗ), Privacy ссылка */}
         <footer
           className="mt-auto py-6 px-4 text-xs"
