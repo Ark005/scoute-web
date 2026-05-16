@@ -261,6 +261,7 @@ export default async function GeorgiaPage() {
                 citySlug="tbilisi"
                 cityLabel="Тбилиси"
                 days={3}
+                label="✦ Составить маршрут"
                 className="inline-flex items-center gap-2 px-5 py-3 rounded-xl font-semibold text-white transition hover:scale-105"
                 style={{ background: "var(--blue)", fontSize: 15 }}
               />
