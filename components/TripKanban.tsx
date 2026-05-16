@@ -125,6 +125,12 @@ export default function TripKanban({ tripId, tripTitle, days, citySlug, countryS
   const [newCitySlug, setNewCitySlug] = useState<string>("batumi");
   const [newCityDays, setNewCityDays] = useState<number>(3);
   const [addError, setAddError] = useState<string | null>(null);
+  const [editingGroup, setEditingGroup] = useState<number | null>(null);
+  const [editCitySlug, setEditCitySlug] = useState<string>("tbilisi");
+  const [editCityDays, setEditCityDays] = useState<number>(3);
+  const [editError, setEditError] = useState<string | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [menuOpenFor, setMenuOpenFor] = useState<number | null>(null);
 
   // Per-city POI data
   const [poiByCity, setPoiByCity] = useState<Record<string, { excursions: PoiItem[]; culture: PoiItem[]; restaurants: PoiItem[] }>>({});
@@ -252,6 +258,95 @@ export default function TripKanban({ tripId, tripTitle, days, citySlug, countryS
     setDragOver(null);
   };
 
+  // ── Save merged trip helper ──────────────────────────────────────────────
+
+  const saveTripAndRedirect = async (mergedDays: Day[], sourceTag: string) => {
+    const renumbered = mergedDays.map((d, i) => ({ ...d, day: i + 1 }));
+    const slugs = Array.from(new Set(renumbered.map(d => d.city_slug || citySlug || "").filter(Boolean)));
+    const labels = slugs.map(s => CITY_META[s]?.label || s).join(" + ");
+    const totalDays = renumbered.length;
+    const title = totalDays > 0
+      ? `${labels} — ${totalDays} ${totalDays === 1 ? "день" : totalDays < 5 ? "дня" : "дн"}`
+      : tripTitle;
+
+    const r = await fetch("/api/trip/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title,
+        country_slug: countrySlug || "georgia",
+        city_slug: slugs[0] || citySlug || "tbilisi",
+        program: { days: renumbered },
+        meta: { multi_city: slugs },
+        source: sourceTag,
+      }),
+    });
+    if (!r.ok) throw new Error(`save ${r.status}`);
+    const saved = await r.json();
+    router.push(`/trip/${saved.id}`);
+  };
+
+  // ── Edit / Remove city ───────────────────────────────────────────────────
+
+  const openEdit = (groupIdx: number) => {
+    const group = cityGroups[groupIdx];
+    setEditingGroup(groupIdx);
+    setEditCitySlug(group.citySlug);
+    setEditCityDays(group.daysInGroup.length);
+    setEditError(null);
+    setMenuOpenFor(null);
+  };
+
+  const handleEditCity = async () => {
+    if (editingGroup === null) return;
+    setEditing(true);
+    setEditError(null);
+    try {
+      const group = cityGroups[editingGroup];
+      const r1 = await fetch("/api/agent/build-from-chat/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          city_slug: editCitySlug,
+          days: editCityDays,
+          must_see_names: [],
+          fill_with_must_see: true,
+          min_count: 5,
+        }),
+      });
+      if (!r1.ok) throw new Error(`build ${r1.status}`);
+      const newProgram = await r1.json();
+      const newDays: Day[] = (newProgram?.days || []).map((d: Day) => ({ ...d, city_slug: editCitySlug }));
+
+      // Replace this group's slice in board with newDays
+      const startIdx = group.daysInGroup[0].globalIdx;
+      const endIdx = group.daysInGroup[group.daysInGroup.length - 1].globalIdx;
+      const merged: Day[] = [
+        ...board.slice(0, startIdx),
+        ...newDays,
+        ...board.slice(endIdx + 1),
+      ];
+      await saveTripAndRedirect(merged, "kanban_edit_city");
+    } catch (e: unknown) {
+      setEditError(e instanceof Error ? e.message : "Ошибка");
+      setEditing(false);
+    }
+  };
+
+  const handleRemoveCity = async (groupIdx: number) => {
+    if (cityGroups.length <= 1) return;
+    setMenuOpenFor(null);
+    try {
+      const group = cityGroups[groupIdx];
+      const startIdx = group.daysInGroup[0].globalIdx;
+      const endIdx = group.daysInGroup[group.daysInGroup.length - 1].globalIdx;
+      const merged: Day[] = [...board.slice(0, startIdx), ...board.slice(endIdx + 1)];
+      await saveTripAndRedirect(merged, "kanban_remove_city");
+    } catch (e: unknown) {
+      console.error(e);
+    }
+  };
+
   // ── Add city ─────────────────────────────────────────────────────────────
 
   const handleAddCity = async () => {
@@ -314,30 +409,126 @@ export default function TripKanban({ tripId, tripTitle, days, citySlug, countryS
         Перетаскивайте карточки между днями и внутри дня. Снизу — что ещё можно добавить.
       </p>
 
-      {/* Kanban — city groups */}
-      <div className="overflow-x-auto pb-3" style={{ scrollbarWidth: "thin" }}>
-        <div className="flex gap-4 items-start" style={{ minWidth: "min-content" }}>
-          {cityGroups.map((group, groupIdx) => {
-            const cityMeta = CITY_META[group.citySlug] || { label: group.citySlug, emoji: "📍" };
-            const isActive = group.citySlug === activeCitySlug;
-            return (
-              <div key={groupIdx}>
-                {/* City header */}
+      {/* Kanban — vertical city groups (each city = own row with day columns) */}
+      <div className="flex flex-col gap-4">
+        {cityGroups.map((group, groupIdx) => {
+          const cityMeta = CITY_META[group.citySlug] || { label: group.citySlug, emoji: "📍" };
+          const isActive = group.citySlug === activeCitySlug;
+          const isEditing = editingGroup === groupIdx;
+          const menuOpen = menuOpenFor === groupIdx;
+          return (
+            <div key={groupIdx} className="rounded-2xl p-3" style={{
+              background: isActive ? "#F0F9FF" : "#F9FAFB",
+              border: `1px solid ${isActive ? "#3B82F6" : "#E5E7EB"}`,
+              transition: "background 0.15s, border 0.15s",
+            }}>
+              {/* City header row */}
+              <div className="flex items-center gap-2 mb-3 relative">
                 <button
                   onClick={() => setActiveCitySlug(group.citySlug)}
-                  className="flex items-center gap-2 mb-2 px-3 py-2 rounded-lg w-full text-left transition"
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg transition"
                   style={{
-                    background: isActive ? "#EFF6FF" : "transparent",
+                    background: isActive ? "#3B82F6" : "white",
+                    color: isActive ? "white" : "var(--dark)",
                     border: `1px solid ${isActive ? "#3B82F6" : "#E5E7EB"}`,
                   }}
                 >
                   <span className="text-lg">{cityMeta.emoji}</span>
-                  <span className="font-bold text-sm" style={{ color: "var(--dark)" }}>{cityMeta.label}</span>
-                  <span className="text-xs text-gray-500 ml-auto">{group.daysInGroup.length} {group.daysInGroup.length === 1 ? "день" : group.daysInGroup.length < 5 ? "дня" : "дн"}</span>
+                  <span className="font-bold text-sm">{cityMeta.label}</span>
+                  <span className="text-xs opacity-75">· {group.daysInGroup.length} {group.daysInGroup.length === 1 ? "день" : group.daysInGroup.length < 5 ? "дня" : "дн"}</span>
                 </button>
+                <button
+                  onClick={() => setMenuOpenFor(menuOpen ? null : groupIdx)}
+                  className="w-8 h-8 rounded-lg flex items-center justify-center transition hover:bg-gray-200"
+                  style={{ background: menuOpen ? "#E5E7EB" : "transparent", color: "#6B7280", fontWeight: 700 }}
+                  title="Действия с городом"
+                >
+                  ⋯
+                </button>
+                {menuOpen && (
+                  <div className="absolute top-full left-12 mt-1 bg-white rounded-lg shadow-lg z-20 py-1" style={{ border: "1px solid #E5E7EB", minWidth: 160 }}>
+                    <button
+                      onClick={() => openEdit(groupIdx)}
+                      className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50"
+                      style={{ color: "var(--dark)" }}
+                    >
+                      ✏️ Поменять
+                    </button>
+                    {cityGroups.length > 1 && (
+                      <button
+                        onClick={() => handleRemoveCity(groupIdx)}
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-red-50"
+                        style={{ color: "#DC2626" }}
+                      >
+                        🗑 Удалить город
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
 
-                {/* Day columns for this city */}
-                <div className="flex gap-3">
+              {/* Edit panel */}
+              {isEditing && (
+                <div className="rounded-xl bg-white p-3 mb-3" style={{ border: "1px solid #3B82F6" }}>
+                  <div className="font-bold text-sm mb-2" style={{ color: "var(--dark)" }}>Поменять город</div>
+                  <div className="grid grid-cols-3 gap-1 mb-3 max-h-32 overflow-y-auto">
+                    {CITY_OPTIONS.map(o => (
+                      <button
+                        key={o.slug}
+                        onClick={() => setEditCitySlug(o.slug)}
+                        className="text-left px-2 py-1.5 rounded text-xs transition"
+                        style={{
+                          background: editCitySlug === o.slug ? "#EFF6FF" : "transparent",
+                          border: `1px solid ${editCitySlug === o.slug ? "#3B82F6" : "#E5E7EB"}`,
+                          fontWeight: editCitySlug === o.slug ? 700 : 400,
+                        }}
+                      >
+                        {o.emoji} {o.label}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="font-bold text-sm mb-2" style={{ color: "var(--dark)" }}>Сколько дней?</div>
+                  <div className="flex gap-1 flex-wrap mb-3">
+                    {DAY_CHOICES.map(n => (
+                      <button
+                        key={n}
+                        onClick={() => setEditCityDays(n)}
+                        className="px-2.5 py-1 rounded text-xs transition"
+                        style={{
+                          background: editCityDays === n ? "#3B82F6" : "white",
+                          color: editCityDays === n ? "white" : "var(--dark)",
+                          border: "1px solid #E5E7EB",
+                          fontWeight: editCityDays === n ? 700 : 400,
+                        }}
+                      >
+                        {n}
+                      </button>
+                    ))}
+                  </div>
+                  {editError && <div className="text-xs text-red-500 mb-2">{editError}</div>}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleEditCity}
+                      disabled={editing}
+                      className="flex-1 px-3 py-2 rounded-lg text-white text-sm font-bold transition"
+                      style={{ background: editing ? "#6B7280" : "#1B4DFF", cursor: editing ? "default" : "pointer" }}
+                    >
+                      {editing ? "⏳ Собираем..." : "Сохранить"}
+                    </button>
+                    <button
+                      onClick={() => { setEditingGroup(null); setEditError(null); }}
+                      className="px-3 py-2 rounded-lg text-sm transition"
+                      style={{ background: "transparent", color: "#6B7280", border: "1px solid #E5E7EB" }}
+                    >
+                      Отмена
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Day columns for this city — horizontal */}
+              <div className="overflow-x-auto pb-2">
+                <div className="flex gap-3" style={{ minWidth: "min-content" }}>
                   {group.daysInGroup.map(({ day, globalIdx }) => {
                     const color = DAY_COLORS[globalIdx % DAY_COLORS.length];
                     const cards = (day.slots || []).map((s, i) => ({ slot: s, originalIdx: i })).filter(x => x.slot.type !== "transit");
@@ -349,8 +540,8 @@ export default function TripKanban({ tripId, tripTitle, days, citySlug, countryS
                         onDrop={(e) => onColumnDrop(e, globalIdx)}
                         style={{
                           width: 240, flexShrink: 0,
-                          background: "#F9FAFB", borderRadius: 14,
-                          border: "1px solid #E5E7EB", padding: 10, minHeight: 200,
+                          background: "white", borderRadius: 12,
+                          border: "1px solid #E5E7EB", padding: 10, minHeight: 160,
                         }}
                       >
                         <div className="flex items-center gap-2 mb-3 pb-2 border-b" style={{ borderColor: "#E5E7EB" }}>
@@ -366,6 +557,7 @@ export default function TripKanban({ tripId, tripTitle, days, citySlug, countryS
                             const isDragging = dragged?.from === "board" && dragged.dayIdx === globalIdx && dragged.slotIdx === originalIdx;
                             const showDropAbove = dragOver?.dayIdx === globalIdx && dragOver.idx === cardIdx;
                             const label = slotLabel(slot);
+                            const poiHref = slot.id && (slot.type === "attraction" || slot.is_event) ? `/poi/attraction/${slot.id}` : null;
                             return (
                               <div key={originalIdx}>
                                 {showDropAbove && <div style={{ height: 3, background: color, borderRadius: 2, marginBottom: 6 }} />}
@@ -373,7 +565,7 @@ export default function TripKanban({ tripId, tripTitle, days, citySlug, countryS
                                   draggable
                                   onDragStart={() => onCardDragStart(globalIdx, originalIdx)}
                                   onDragOver={(e) => onSlotDragOver(e, globalIdx, cardIdx)}
-                                  className="bg-white rounded-lg p-2 cursor-grab active:cursor-grabbing"
+                                  className="bg-white rounded-lg p-2 cursor-grab active:cursor-grabbing relative group"
                                   style={{ border: "1px solid #E5E7EB", opacity: isDragging ? 0.4 : 1 }}
                                 >
                                   <div className="flex gap-2">
@@ -397,6 +589,19 @@ export default function TripKanban({ tripId, tripTitle, days, citySlug, countryS
                                       )}
                                     </div>
                                   </div>
+                                  {poiHref && (
+                                    <a
+                                      href={poiHref}
+                                      onClick={(e) => e.stopPropagation()}
+                                      onMouseDown={(e) => e.stopPropagation()}
+                                      onDragStart={(e) => e.preventDefault()}
+                                      className="absolute top-1 right-1 w-6 h-6 rounded bg-white opacity-0 group-hover:opacity-100 flex items-center justify-center text-xs transition"
+                                      style={{ border: "1px solid #E5E7EB", color: "#3B82F6" }}
+                                      title="Подробнее"
+                                    >
+                                      ↗
+                                    </a>
+                                  )}
                                 </div>
                               </div>
                             );
@@ -410,97 +615,115 @@ export default function TripKanban({ tripId, tripTitle, days, citySlug, countryS
                   })}
                 </div>
               </div>
-            );
-          })}
+            </div>
+          );
+        })}
 
-          {/* Add city button column */}
-          <div className="flex flex-col gap-2" style={{ width: 240, flexShrink: 0, marginTop: 44 }}>
-            {!showAddCity ? (
+        {/* Add city block */}
+        {!showAddCity ? (
+          <button
+            onClick={() => setShowAddCity(true)}
+            className="rounded-2xl border-2 border-dashed transition hover:scale-[1.01]"
+            style={{
+              borderColor: "#D1D5DB",
+              background: "white",
+              padding: "20px",
+              color: "#6B7280",
+              fontWeight: 700,
+              fontSize: 14,
+              cursor: "pointer",
+            }}
+          >
+            + Добавить ещё один город
+          </button>
+        ) : (
+          <div className="rounded-2xl bg-white p-4" style={{ border: "1px solid #3B82F6" }}>
+            <div className="font-bold text-sm mb-2" style={{ color: "var(--dark)" }}>Какой город добавить?</div>
+            <div className="grid grid-cols-3 sm:grid-cols-4 gap-1 mb-3">
+              {CITY_OPTIONS.map(o => (
+                <button
+                  key={o.slug}
+                  onClick={() => setNewCitySlug(o.slug)}
+                  className="text-left px-2 py-1.5 rounded text-xs transition"
+                  style={{
+                    background: newCitySlug === o.slug ? "#EFF6FF" : "transparent",
+                    border: `1px solid ${newCitySlug === o.slug ? "#3B82F6" : "#E5E7EB"}`,
+                    fontWeight: newCitySlug === o.slug ? 700 : 400,
+                  }}
+                >
+                  {o.emoji} {o.label}
+                </button>
+              ))}
+            </div>
+            <div className="font-bold text-sm mb-2" style={{ color: "var(--dark)" }}>Сколько дней?</div>
+            <div className="flex gap-1 flex-wrap mb-3">
+              {DAY_CHOICES.map(n => (
+                <button
+                  key={n}
+                  onClick={() => setNewCityDays(n)}
+                  className="px-3 py-1 rounded text-xs transition"
+                  style={{
+                    background: newCityDays === n ? "#3B82F6" : "white",
+                    color: newCityDays === n ? "white" : "var(--dark)",
+                    border: "1px solid #E5E7EB",
+                    fontWeight: newCityDays === n ? 700 : 400,
+                  }}
+                >
+                  {n}
+                </button>
+              ))}
+            </div>
+            {addError && <div className="text-xs text-red-500 mb-2">{addError}</div>}
+            <div className="flex gap-2">
               <button
-                onClick={() => setShowAddCity(true)}
-                className="rounded-xl border-2 border-dashed transition hover:scale-[1.02]"
-                style={{
-                  borderColor: "#D1D5DB",
-                  background: "white",
-                  padding: "40px 16px",
-                  color: "#6B7280",
-                  fontWeight: 700,
-                  fontSize: 14,
-                  cursor: "pointer",
-                }}
+                onClick={handleAddCity}
+                disabled={addingCity}
+                className="px-4 py-2 rounded-lg text-white text-sm font-bold transition"
+                style={{ background: addingCity ? "#6B7280" : "#1B4DFF", cursor: addingCity ? "default" : "pointer" }}
               >
-                + Добавить город
+                {addingCity ? "⏳ Собираем..." : "Добавить"}
               </button>
-            ) : (
-              <div className="rounded-xl bg-white p-3" style={{ border: "1px solid #3B82F6" }}>
-                <div className="font-bold text-sm mb-2" style={{ color: "var(--dark)" }}>Какой город?</div>
-                <div className="grid grid-cols-2 gap-1 mb-3 max-h-44 overflow-y-auto">
-                  {CITY_OPTIONS.map(o => (
-                    <button
-                      key={o.slug}
-                      onClick={() => setNewCitySlug(o.slug)}
-                      className="text-left px-2 py-1.5 rounded text-xs transition"
-                      style={{
-                        background: newCitySlug === o.slug ? "#EFF6FF" : "transparent",
-                        border: `1px solid ${newCitySlug === o.slug ? "#3B82F6" : "#E5E7EB"}`,
-                        fontWeight: newCitySlug === o.slug ? 700 : 400,
-                      }}
-                    >
-                      {o.emoji} {o.label}
-                    </button>
-                  ))}
-                </div>
-                <div className="font-bold text-sm mb-2" style={{ color: "var(--dark)" }}>Сколько дней?</div>
-                <div className="flex gap-1 flex-wrap mb-3">
-                  {DAY_CHOICES.map(n => (
-                    <button
-                      key={n}
-                      onClick={() => setNewCityDays(n)}
-                      className="px-2.5 py-1 rounded text-xs transition"
-                      style={{
-                        background: newCityDays === n ? "#3B82F6" : "white",
-                        color: newCityDays === n ? "white" : "var(--dark)",
-                        border: "1px solid #E5E7EB",
-                        fontWeight: newCityDays === n ? 700 : 400,
-                      }}
-                    >
-                      {n}
-                    </button>
-                  ))}
-                </div>
-                {addError && <div className="text-xs text-red-500 mb-2">{addError}</div>}
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleAddCity}
-                    disabled={addingCity}
-                    className="flex-1 px-3 py-2 rounded-lg text-white text-sm font-bold transition"
-                    style={{ background: addingCity ? "#6B7280" : "#1B4DFF", cursor: addingCity ? "default" : "pointer" }}
-                  >
-                    {addingCity ? "⏳ Собираем..." : "Добавить"}
-                  </button>
-                  <button
-                    onClick={() => { setShowAddCity(false); setAddError(null); }}
-                    className="px-3 py-2 rounded-lg text-sm transition"
-                    style={{ background: "transparent", color: "#6B7280", border: "1px solid #E5E7EB" }}
-                  >
-                    Отмена
-                  </button>
-                </div>
-              </div>
-            )}
+              <button
+                onClick={() => { setShowAddCity(false); setAddError(null); }}
+                className="px-3 py-2 rounded-lg text-sm transition"
+                style={{ background: "transparent", color: "#6B7280", border: "1px solid #E5E7EB" }}
+              >
+                Отмена
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
-      {/* Active city indicator for panels */}
-      {Object.keys(CITY_META).includes(activeCitySlug) && cityGroups.length > 1 && (
-        <div className="text-xs text-gray-500 mt-3 mb-2">
-          Панели снизу показывают {CITY_META[activeCitySlug]?.emoji} {CITY_META[activeCitySlug]?.label}. Кликни заголовок города выше, чтобы переключить.
-        </div>
-      )}
+      {/* Picker panels with city tabs */}
+      <div className="mt-6">
+        {cityGroups.length > 1 && (
+          <div className="flex items-center gap-2 mb-3 flex-wrap">
+            <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">Показать варианты для:</span>
+            {cityGroups.map((g, i) => {
+              const cm = CITY_META[g.citySlug] || { label: g.citySlug, emoji: "📍" };
+              const active = g.citySlug === activeCitySlug;
+              return (
+                <button
+                  key={i}
+                  onClick={() => setActiveCitySlug(g.citySlug)}
+                  className="px-3 py-1.5 rounded-full text-xs transition"
+                  style={{
+                    background: active ? "#1B4DFF" : "white",
+                    color: active ? "white" : "var(--dark)",
+                    border: `1px solid ${active ? "#1B4DFF" : "#E5E7EB"}`,
+                    fontWeight: active ? 700 : 500,
+                  }}
+                >
+                  {cm.emoji} {cm.label}
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
 
-      {/* Picker panels */}
-      <div className="mt-4 flex flex-col gap-2">
+      <div className="mt-2 flex flex-col gap-2">
         <PanelButton
           label={`Экскурсии и музеи (${CITY_META[activeCitySlug]?.label || activeCitySlug})`}
           emoji="🎫"
