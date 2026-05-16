@@ -8,6 +8,7 @@ import { aviasalesUrl, localrentUrl, ostrovokUrl } from "@/lib/transport";
 import GeorgiaMapClient from "@/components/GeorgiaMapClient";
 import AffiliateDisclaimer from "@/components/AffiliateDisclaimer";
 import EventsCalendar from "@/components/EventsCalendar";
+import QuickPlanButton from "@/components/QuickPlanButton";
 
 export const revalidate = 3600;
 
@@ -256,12 +257,23 @@ export default async function GeorgiaPage() {
               башни Сванетии и серные бани Тбилиси.
             </p>
             <div className="flex flex-wrap gap-3 mt-7">
+              <QuickPlanButton
+                citySlug="tbilisi"
+                cityLabel="Тбилиси"
+                days={3}
+                className="inline-flex items-center gap-2 px-5 py-3 rounded-xl font-semibold text-white transition hover:scale-105"
+                style={{ background: "var(--blue)", fontSize: 15 }}
+              />
               <Link
                 href="/autopilot"
-                className="inline-flex items-center gap-2 px-5 py-3 rounded-xl font-semibold text-white transition hover:scale-105"
-                style={{ background: "var(--blue)" }}
+                className="inline-flex items-center gap-2 px-5 py-3 rounded-xl font-semibold transition hover:bg-white/20"
+                style={{
+                  background: "rgba(255,255,255,0.12)",
+                  color: "white",
+                  border: "1px solid rgba(255,255,255,0.3)",
+                }}
               >
-                🤖 Собрать маршрут с AI
+                🤖 Собрать с AI
               </Link>
               <Link
                 href="#cities"

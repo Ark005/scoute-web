@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { CityPOI } from "@/lib/types";
 import AddToTripButton from "@/components/AddToTripButton";
+import QuickPlanButton from "@/components/QuickPlanButton";
 
 type Props = {
   citySlug: string;
@@ -271,6 +272,14 @@ export default function CityExplorer({ citySlug, cityName, pois, events = [] }: 
             </div>
             <div className="text-xs text-white/60">{pois.length} мест</div>
           </div>
+          <QuickPlanButton
+            citySlug={citySlug}
+            cityLabel={cityName}
+            days={3}
+            label={`✦ Спланировать 3 дня`}
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg font-bold text-white text-sm transition hover:scale-[1.03]"
+            style={{ background: "#1B4DFF" }}
+          />
           <div className="hidden md:flex items-center gap-1 ml-auto p-0.5 rounded-xl" style={{ background: "rgba(255,255,255,0.08)" }}>
             {TAB_LABELS.map((t) => (
               <button
