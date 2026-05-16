@@ -11,6 +11,7 @@ import { CITIES } from "@/lib/cities-data";
 import TransportBlock from "./TransportBlock";
 import WikimediaCredit from "./WikimediaCredit";
 import TripOnboardingDialog, { OnboardingResult } from "./TripOnboardingDialog";
+import { pushTrip } from "@/lib/trip-history";
 
 const RouteMap = dynamic(() => import("./RouteMap"), { ssr: false });
 
@@ -147,6 +148,7 @@ export default function RouteDetailView({ route }: Props) {
       });
       if (!r.ok) throw new Error(`save ${r.status}`);
       const saved = await r.json();
+      pushTrip({ id: saved.id, title: `${route.title} — мой план`, citySlug: defaultCitySlug, countrySlug: "georgia" });
       router.push(`/trip/${saved.id}`);
     } catch (e: unknown) {
       setCreateError(e instanceof Error ? e.message : "Ошибка");

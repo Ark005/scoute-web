@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import Logo from "./Logo";
 import TripDraftBadge from "./TripDraftBadge";
+import AuthButton from "./AuthButton";
 
 const NAV_LINKS = [
   { href: "/georgia", label: "Грузия" },
@@ -75,6 +76,7 @@ export default function NavBar() {
           >
             ✨ Составить маршрут
           </Link>
+          <AuthButton />
         </div>
 
         {/* Mobile hamburger */}

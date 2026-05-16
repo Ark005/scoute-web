@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { pushTrip } from "@/lib/trip-history";
 
 type Slot = {
   type: string;
@@ -283,6 +284,7 @@ export default function TripKanban({ tripId, tripTitle, days, citySlug, countryS
     });
     if (!r.ok) throw new Error(`save ${r.status}`);
     const saved = await r.json();
+    pushTrip({ id: saved.id, title, citySlug: slugs[0] || citySlug || "tbilisi", countrySlug: countrySlug || "georgia" });
     router.push(`/trip/${saved.id}`);
   };
 

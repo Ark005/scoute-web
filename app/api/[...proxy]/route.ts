@@ -4,6 +4,10 @@ const UPSTREAM = "https://scoute.app/api";
 
 async function handler(req: NextRequest, { params }: { params: Promise<{ proxy: string[] }> }) {
   const { proxy } = await params;
+  // Skip auth routes — handled by NextAuth at /api/auth/[...nextauth]
+  if (proxy[0] === "auth") {
+    return new NextResponse("Not Found", { status: 404 });
+  }
   const path = proxy.join("/");
   const search = req.nextUrl.search || "";
   const url = `${UPSTREAM}/${path}/${search}`;

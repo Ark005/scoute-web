@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { pushTrip } from "@/lib/trip-history";
 
 type Props = {
   citySlug: string;
@@ -54,6 +55,7 @@ export default function QuickPlanButton({
       });
       if (!r2.ok) throw new Error(`save ${r2.status}`);
       const saved = await r2.json();
+      pushTrip({ id: saved.id, title: `${cityLabel} — ${days} ${days === 1 ? "день" : days < 5 ? "дня" : "дн"}`, citySlug, countrySlug: "georgia" });
       router.push(`/trip/${saved.id}`);
     } catch {
       setLoading(false);

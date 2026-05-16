@@ -2,6 +2,7 @@
 
 import { useRef, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { pushTrip } from "@/lib/trip-history";
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 
@@ -336,6 +337,7 @@ export default function TripPickerPanel({ initialCountrySlug }: { initialCountry
       });
       if (!r2.ok) throw new Error(`save ${r2.status}`);
       const saved = await r2.json();
+      pushTrip({ id: saved.id, title: `${cityLabel} — ${d} ${d === 1 ? "день" : d < 5 ? "дня" : "дн"}`, citySlug, countrySlug: "georgia" });
       router.push(`/trip/${saved.id}`);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Ошибка");

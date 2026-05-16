@@ -3,6 +3,7 @@ import Script from "next/script";
 import "./globals.css";
 import NavBar from "@/components/NavBar";
 import CookieBanner from "@/components/CookieBanner";
+import SessionProviderWrapper from "@/components/SessionProviderWrapper";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://scoute.app"),
@@ -31,9 +32,10 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full flex flex-col">
-        <NavBar />
-        {children}
-        <CookieBanner />
+        <SessionProviderWrapper>
+          <NavBar />
+          {children}
+          <CookieBanner />
         {/* Footer — 6+ маркер (436-ФЗ), Privacy ссылка */}
         <footer
           className="mt-auto py-6 px-4 text-xs"
@@ -68,6 +70,7 @@ export default function RootLayout({
             Реклама. Go Travel Un Limited, ИНН: 9909520797. ООО «Бронирование гостиниц», ИНН: 7703389880.
           </div>
         </footer>
+        </SessionProviderWrapper>
       </body>
     </html>
   );
