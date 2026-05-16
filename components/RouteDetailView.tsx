@@ -4,11 +4,13 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { RouteDetail, Waypoint } from "@/lib/types";
 import { REGION_LABELS } from "@/lib/regions";
 import { CITIES } from "@/lib/cities-data";
 import TransportBlock from "./TransportBlock";
 import WikimediaCredit from "./WikimediaCredit";
+import TripOnboardingDialog, { OnboardingResult } from "./TripOnboardingDialog";
 
 const RouteMap = dynamic(() => import("./RouteMap"), { ssr: false });
 
@@ -80,9 +82,77 @@ function groupByDay(waypoints: Waypoint[], totalDays: number): Map<number, Waypo
 }
 
 export default function RouteDetailView({ route }: Props) {
+  const router = useRouter();
   const [hoveredStop, setHoveredStop] = useState<number | null>(null);
   const [expandedDay, setExpandedDay] = useState<number | null>(1);
   const [lightboxImg, setLightboxImg] = useState<string | null>(null);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
+
+  const handleMakeItMine = async (ob: OnboardingResult) => {
+    setCreating(true);
+    setCreateError(null);
+    try {
+      // Group waypoints by day
+      const waypts = route.waypoints ?? route.waypoints_preview ?? [];
+      const hasDays = waypts.some(w => w.day && w.day > 0);
+      const days: Array<{ day: number; city_slug: string; slots: Array<Record<string, unknown>> }> = [];
+      const cityFromTag = route.tags?.find(t =>
+        CITIES.find(c => c.name.toLowerCase() === t.toLowerCase())
+      );
+      const cityMatch = cityFromTag
+        ? CITIES.find(c => c.name.toLowerCase() === cityFromTag.toLowerCase())
+        : null;
+      const defaultCitySlug = cityMatch?.slug || "tbilisi";
+
+      for (let i = 1; i <= route.duration_days; i++) {
+        const dayWpts = hasDays
+          ? waypts.filter(w => w.day === i)
+          : waypts.slice(
+              Math.floor(((i - 1) * waypts.length) / route.duration_days),
+              Math.floor((i * waypts.length) / route.duration_days)
+            );
+        const slots = dayWpts.map((wp, idx) => ({
+          type: wp.waypoint_type === "restaurant" ? "restaurant" : wp.waypoint_type === "hotel" ? "hotel" : "attraction",
+          name: wp.name,
+          time: `${String(10 + idx * 2).padStart(2, "0")}:00`,
+          description: wp.description,
+          latitude: wp.latitude,
+          longitude: wp.longitude,
+          image_url: wp.image_url,
+          duration_min: wp.duration_min || 60,
+          id: wp.id,
+        }));
+        days.push({ day: i, city_slug: defaultCitySlug, slots });
+      }
+
+      const r = await fetch("/api/trip/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: `${route.title} — мой план`,
+          country_slug: "georgia",
+          city_slug: defaultCitySlug,
+          program: { days },
+          meta: {
+            source_route: route.slug,
+            days: ob.days,
+            date_from: ob.date_from,
+            date_to: ob.date_to,
+            budget: ob.budget,
+          },
+          source: "route_clone",
+        }),
+      });
+      if (!r.ok) throw new Error(`save ${r.status}`);
+      const saved = await r.json();
+      router.push(`/trip/${saved.id}`);
+    } catch (e: unknown) {
+      setCreateError(e instanceof Error ? e.message : "Ошибка");
+      setCreating(false);
+    }
+  };
 
   // Use full waypoints if available, fallback to preview
   const waypoints = route.waypoints ?? route.waypoints_preview ?? [];
@@ -101,6 +171,19 @@ export default function RouteDetailView({ route }: Props) {
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "var(--bg)" }}>
+      {/* Onboarding dialog */}
+      {showOnboarding && (
+        <TripOnboardingDialog
+          title={`«${route.title}» — когда едешь?`}
+          defaultDays={route.duration_days}
+          hideDays
+          loading={creating}
+          error={createError}
+          onCancel={() => { setShowOnboarding(false); setCreateError(null); }}
+          onConfirm={handleMakeItMine}
+        />
+      )}
+
       {/* Lightbox */}
       {lightboxImg && (
         <div
@@ -156,6 +239,15 @@ export default function RouteDetailView({ route }: Props) {
             </span>
           )}
         </div>
+
+        {/* Primary CTA: Сделать своим */}
+        <button
+          onClick={() => setShowOnboarding(true)}
+          className="mt-4 inline-flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-white transition hover:scale-[1.02]"
+          style={{ background: "#1B4DFF", fontSize: 15 }}
+        >
+          ✦ Сделать этот маршрут своим
+        </button>
 
         {/* Tags — city tags are clickable links */}
         {route.tags && route.tags.length > 0 && (
