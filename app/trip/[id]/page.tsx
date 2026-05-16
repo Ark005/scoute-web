@@ -222,7 +222,7 @@ export default async function TripPage({
   return (
     <>
     <Script src="https://emrld.ltd/NTIxNzg0.js?t=521784" strategy="afterInteractive" />
-    <main className="max-w-3xl mx-auto px-4 py-6">
+    <main className="max-w-screen-xl mx-auto px-4 py-6">
       <div className="mb-6">
         <Link
           href="/autopilot"
