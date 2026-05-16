@@ -310,6 +310,13 @@ export default function TripPickerPanel({ initialCountrySlug }: { initialCountry
       });
       if (!r1.ok) throw new Error(`build ${r1.status}`);
       const program = await r1.json();
+      // Stamp city_slug on each day so multi-city kanban can group
+      if (Array.isArray(program?.days)) {
+        program.days = program.days.map((day: { city_slug?: string; [k: string]: unknown }) => ({
+          ...day,
+          city_slug: citySlug,
+        }));
+      }
 
       const r2 = await fetch("/api/trip/", {
         method: "POST",
