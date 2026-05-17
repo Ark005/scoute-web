@@ -7,7 +7,6 @@ import type { CityInfo, RouteListItem, CityPOI, CityBudget } from "@/lib/types";
 import { aviasalesUrl, localrentUrl, ostrovokUrl } from "@/lib/transport";
 import GeorgiaMapClient from "@/components/GeorgiaMapClient";
 import AffiliateDisclaimer from "@/components/AffiliateDisclaimer";
-import EventsCalendar from "@/components/EventsCalendar";
 import QuickPlanButton from "@/components/QuickPlanButton";
 
 export const revalidate = 3600;
@@ -120,23 +119,6 @@ const CITY_PREFERRED_HERO: Record<string, RegExp[]> = {
   batumi: [/набережн/i, /пьяцца/i, /ботанич/i, /бульвар/i, /колоннад/i, /статуя.*али/i, /^батум/i],
 };
 
-async function getTbilisiEvents() {
-  try {
-    const r = await fetch("https://scoute.app/api/events/tbilisi/", {
-      headers: {
-        "User-Agent": "ScouteSSR/1.0",
-        "Authorization": "Basic c2NvdXQ6U2NvdXQyMDI2IQ==",
-      },
-      next: { revalidate: 3600 },
-    });
-    if (!r.ok) return [];
-    const d = await r.json();
-    return d.events || [];
-  } catch {
-    return [];
-  }
-}
-
 async function getCityHero(slug: string): Promise<{ name: string; image: string; pois_count: number } | null> {
   try {
     const data = await getCityPOIs(slug);
@@ -166,11 +148,10 @@ async function getCityHero(slug: string): Promise<{ name: string; image: string;
 }
 
 export default async function GeorgiaPage() {
-  const [allCities, allRoutes, allBudgets, events] = await Promise.all([
+  const [allCities, allRoutes, allBudgets] = await Promise.all([
     getCities().catch(() => [] as CityInfo[]),
     getRoutes().catch(() => [] as RouteListItem[]),
     getCityBudgets().catch(() => [] as CityBudget[]),
-    getTbilisiEvents(),
   ]);
 
   const georgianSet = new Set(GEORGIA_CITY_SLUGS);
@@ -537,13 +518,6 @@ export default async function GeorgiaPage() {
             </div>
           )}
         </section>
-
-        {/* Events */}
-        {events.length > 0 && (
-          <section className="mb-20">
-            <EventsCalendar events={events} />
-          </section>
-        )}
 
         {/* Routes */}
         {routes.length > 0 && (

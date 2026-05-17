@@ -22,7 +22,7 @@ type Props = {
 export default function RotatingRestaurants({
   restaurants,
   intervalMs = 3500,
-  title = "Куда есть в Грузии",
+  title = "Где поесть в Грузии",
   subtitle = "Хинкали, чкмерули, лобиани, оджахури — настоящие места",
 }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
