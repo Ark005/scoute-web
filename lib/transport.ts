@@ -127,6 +127,27 @@ export function localrentUrl(country: string): string {
 // Поиск отелей на Ostrovok.ru. Сырая ссылка — Travelpayouts Drive
 // (скрипт в app/layout.tsx) перепишет домен на emrld.ltd?erid=...
 // в рантайме. cityName — русское/английское имя как в CITIES.name.
+// Ostrovok закрыл /hotel/search/?q=... (404), работает /hotel/<country>/<city-slug>/.
+const OSTROVOK_SLUGS: Record<string, string> = {
+  "тбилиси": "georgia/tbilisi", "tbilisi": "georgia/tbilisi",
+  "батуми": "georgia/batumi", "batumi": "georgia/batumi",
+  "кутаиси": "georgia/kutaisi", "kutaisi": "georgia/kutaisi",
+  "гудаури": "georgia/gudauri", "gudauri": "georgia/gudauri",
+  "бакуриани": "georgia/bakuriani", "bakuriani": "georgia/bakuriani",
+  "боржоми": "georgia/borjomi", "borjomi": "georgia/borjomi",
+  "местиа": "georgia/mestia", "местия": "georgia/mestia", "mestia": "georgia/mestia",
+  "сигнахи": "georgia/sighnaghi", "sighnaghi": "georgia/sighnaghi",
+  "степанцминда": "georgia/kazbegi", "казбеги": "georgia/kazbegi",
+  "stepantsminda": "georgia/kazbegi", "kazbegi": "georgia/kazbegi",
+  "зугдиди": "georgia/zugdidi", "zugdidi": "georgia/zugdidi",
+  "ахалцихе": "georgia/akhaltsikhe", "akhaltsikhe": "georgia/akhaltsikhe",
+  "поти": "georgia/poti", "poti": "georgia/poti",
+  "телави": "georgia/telavi", "telavi": "georgia/telavi",
+  "рустави": "georgia/rustavi", "rustavi": "georgia/rustavi",
+};
+
 export function ostrovokUrl(cityName: string): string {
-  return `https://ostrovok.ru/hotel/search/?q=${encodeURIComponent(cityName)}`;
+  const slug = OSTROVOK_SLUGS[cityName.toLowerCase().trim()];
+  if (slug) return `https://ostrovok.ru/hotel/${slug}/`;
+  return `https://ostrovok.ru/?q=${encodeURIComponent(cityName)}`;
 }

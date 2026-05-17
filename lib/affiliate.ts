@@ -1,11 +1,11 @@
 // Travelpayouts affiliate URL wrapping. Marker 521784 = scoute.app.
 //
 // Aviasales: marker= распознаётся самим aviasales.ru, атрибуция надёжная.
-// Booking, GetYourGuide и прочие: оставляем сырой URL — Travelpayouts Drive
-// (скрипт в app/layout.tsx) сканирует DOM на проде и подменяет на tp.media
-// в рантайме. Если Drive перестанет покрывать — оборачивать вручную через
-// tp.media/r?marker=521784&p=<partner_id>&u=<encoded_url> с правильным p=
-// из кабинета.
+// Booking, Ostrovok, GetYourGuide и прочие: оставляем сырой URL —
+// Travelpayouts Drive (скрипт в app/layout.tsx) сканирует DOM на проде
+// и подменяет на emrld.ltd?erid=... в рантайме. Если Drive перестанет
+// покрывать — оборачивать вручную через tp.media/r?marker=521784&p=...
+// с правильным p= из кабинета.
 
 const TP_MARKER = "521784";
 

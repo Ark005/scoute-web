@@ -4,6 +4,7 @@ import { CityPOI, CityWeather } from "@/lib/types";
 import { notFound } from "next/navigation";
 import CityGuide from "@/components/CityGuide";
 import CityExplorer from "@/components/CityExplorer";
+import HotelBlock from "@/components/HotelBlock";
 import type { Metadata } from "next";
 
 // Города для которых используем новый Flutter-style explorer
@@ -115,8 +116,18 @@ export default async function CityPage({
       }
     } catch {}
 
-    return <CityExplorer citySlug={slug} cityName={ruName} pois={pois} events={events} />;
+    return (
+      <>
+        <CityExplorer citySlug={slug} cityName={ruName} pois={pois} events={events} />
+        <HotelBlock cityName={ruName} />
+      </>
+    );
   }
 
-  return <CityGuide city={cityData} pois={pois} error={error} weather={weather} />;
+  return (
+    <>
+      <CityGuide city={cityData} pois={pois} error={error} weather={weather} />
+      <HotelBlock cityName={cityData.name} />
+    </>
+  );
 }
