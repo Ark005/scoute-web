@@ -480,7 +480,7 @@ export default function CityExplorer({ citySlug, cityName, pois, events = [] }: 
                           color: "#0F172A",
                         }}
                       >
-                        Куда поесть
+                        Где поесть
                       </h3>
                     </div>
                     <div className="flex gap-1">
