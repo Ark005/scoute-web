@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { pushTrip } from "@/lib/trip-history";
+import CityTransferBlock from "@/components/CityTransferBlock";
 
 type Slot = {
   type: string;
@@ -418,8 +419,11 @@ export default function TripKanban({ tripId, tripTitle, days, citySlug, countryS
           const isActive = group.citySlug === activeCitySlug;
           const isEditing = editingGroup === groupIdx;
           const menuOpen = menuOpenFor === groupIdx;
+          const nextGroup = cityGroups[groupIdx + 1];
+          const nextCityLabel = nextGroup ? (CITY_META[nextGroup.citySlug]?.label || nextGroup.citySlug) : null;
           return (
-            <div key={groupIdx} className="rounded-2xl p-3" style={{
+            <div key={groupIdx} className="contents">
+            <div className="rounded-2xl p-3" style={{
               background: isActive ? "#F0F9FF" : "#F9FAFB",
               border: `1px solid ${isActive ? "#3B82F6" : "#E5E7EB"}`,
               transition: "background 0.15s, border 0.15s",
@@ -604,6 +608,20 @@ export default function TripKanban({ tripId, tripTitle, days, citySlug, countryS
                                       ↗
                                     </a>
                                   )}
+                                  {slot.is_event && slot.ticket_url && (
+                                    <a
+                                      href={slot.ticket_url}
+                                      target="_blank"
+                                      rel="noopener sponsored"
+                                      onClick={(e) => e.stopPropagation()}
+                                      onMouseDown={(e) => e.stopPropagation()}
+                                      onDragStart={(e) => e.preventDefault()}
+                                      className="mt-1.5 inline-flex items-center justify-center w-full px-2 py-1 rounded-md text-[10px] font-bold transition hover:opacity-90"
+                                      style={{ background: "#F97316", color: "white" }}
+                                    >
+                                      🎫 Купить билет
+                                    </a>
+                                  )}
                                 </div>
                               </div>
                             );
@@ -617,6 +635,14 @@ export default function TripKanban({ tripId, tripTitle, days, citySlug, countryS
                   })}
                 </div>
               </div>
+            </div>
+            {nextCityLabel && (
+              <CityTransferBlock
+                fromCityLabel={cityMeta.label}
+                toCityLabel={nextCityLabel}
+                countrySlug={countrySlug}
+              />
+            )}
             </div>
           );
         })}

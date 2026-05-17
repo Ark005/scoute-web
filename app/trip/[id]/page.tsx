@@ -4,12 +4,17 @@ import Script from "next/script";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import TripTimeline from "@/components/TripTimeline";
-import EventsCalendar from "@/components/EventsCalendar";
 import TripKanban from "@/components/TripKanban";
-import AffiliateDisclaimer from "@/components/AffiliateDisclaimer";
 import TourBlock from "@/components/TourBlock";
+import StickyBuyBar from "@/components/StickyBuyBar";
 import { cityLabel, countryLabel } from "@/lib/labels";
-import { ostrovokUrl } from "@/lib/transport";
+import {
+  aviasalesUrl,
+  destinationIata,
+  localrentCountry,
+  localrentUrl,
+  ostrovokUrl,
+} from "@/lib/transport";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL || "https://scoute.app/api";
 
@@ -295,32 +300,68 @@ export default async function TripPage({
         </section>
       )}
 
-      {/* Buy CTAs */}
-      <div className="my-8">
-        <h3 className="text-lg font-extrabold mb-3" style={{ color: "var(--dark)" }}>
-          Купить
-        </h3>
-        <div className="flex flex-wrap gap-3">
-          <a
-            href={`https://www.aviasales.ru/search/MOW${(() => { const d = new Date(); d.setDate(d.getDate() + 30); return String(d.getDate()).padStart(2, "0") + String(d.getMonth() + 1).padStart(2, "0"); })()}TBS1?marker=521784`}
-            target="_blank"
-            rel="noopener sponsored"
-            className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold text-white transition hover:scale-105"
-            style={{ background: "#FF6B1B" }}
-          >
-            🛫 Билеты в {countryLabel(trip.country_slug) || "путешествие"}
-          </a>
-          <a
-            href={ostrovokUrl(cityLabel(trip.city_slug) || "Тбилиси")}
-            target="_blank"
-            rel="noopener sponsored"
-            className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold text-white transition hover:scale-105"
-            style={{ background: "#E5174D" }}
-          >
-            🏨 Отель {trip.city_slug ? `в ${cityLabel(trip.city_slug)}` : ""}
-          </a>
-        </div>
-      </div>
+      {/* Buy CTAs — основной блок с реальными датами поездки */}
+      {(() => {
+        const iata = destinationIata(trip.city_slug, trip.country_slug);
+        const hotelCity = cityLabel(trip.city_slug) || "Тбилиси";
+        const rentCountry = localrentCountry(trip.country_slug);
+        return (
+          <div className="my-8">
+            <h3 className="text-lg font-extrabold mb-3" style={{ color: "var(--dark)" }}>
+              Купить
+            </h3>
+            <div className="flex flex-wrap gap-3">
+              {iata && (
+                <a
+                  href={aviasalesUrl(iata, tripDates.from, tripDates.to)}
+                  target="_blank"
+                  rel="noopener sponsored"
+                  className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold text-white transition hover:scale-105"
+                  style={{ background: "#FF6B1B" }}
+                >
+                  🛫 Билеты в {countryLabel(trip.country_slug) || "путешествие"}
+                </a>
+              )}
+              <a
+                href={ostrovokUrl(hotelCity, tripDates.from, tripDates.to)}
+                target="_blank"
+                rel="noopener sponsored"
+                className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold text-white transition hover:scale-105"
+                style={{ background: "#E5174D" }}
+              >
+                🏨 Отель в {hotelCity}
+              </a>
+              {rentCountry && (
+                <a
+                  href={localrentUrl(rentCountry, {
+                    pickupCity: hotelCity,
+                    dateFrom: tripDates.from || undefined,
+                    dateTo: tripDates.to || undefined,
+                  })}
+                  target="_blank"
+                  rel="noopener sponsored"
+                  className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold text-white transition hover:scale-105"
+                  style={{ background: "#1B4DFF" }}
+                >
+                  🚗 Машина в аренду
+                </a>
+              )}
+              <a
+                href="https://yesim.app/?ref=521784"
+                target="_blank"
+                rel="noopener sponsored"
+                className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold text-white transition hover:scale-105"
+                style={{ background: "#10B981" }}
+              >
+                📶 eSIM
+              </a>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* GYG туры по этому городу */}
+      {trip.city_slug && <TourBlock citySlug={trip.city_slug} />}
 
       {/* Share */}
       <div
@@ -341,6 +382,44 @@ export default async function TripPage({
         </div>
       </div>
     </main>
+
+    {/* Sticky CTA bar — единственное что приносит деньги */}
+    {(() => {
+      const iata = destinationIata(trip.city_slug, trip.country_slug);
+      const hotelCity = cityLabel(trip.city_slug) || "Тбилиси";
+      const rentCountry = localrentCountry(trip.country_slug);
+      const ctas = [
+        iata && {
+          label: "Билеты",
+          emoji: "🛫",
+          href: aviasalesUrl(iata, tripDates.from, tripDates.to),
+          bg: "#FF6B1B",
+        },
+        {
+          label: "Отель",
+          emoji: "🏨",
+          href: ostrovokUrl(hotelCity, tripDates.from, tripDates.to),
+          bg: "#E5174D",
+        },
+        rentCountry && {
+          label: "Машина",
+          emoji: "🚗",
+          href: localrentUrl(rentCountry, {
+            pickupCity: hotelCity,
+            dateFrom: tripDates.from || undefined,
+            dateTo: tripDates.to || undefined,
+          }),
+          bg: "#1B4DFF",
+        },
+        {
+          label: "eSIM",
+          emoji: "📶",
+          href: "https://yesim.app/?ref=521784",
+          bg: "#10B981",
+        },
+      ].filter(Boolean) as { label: string; emoji: string; href: string; bg: string }[];
+      return <StickyBuyBar ctas={ctas} />;
+    })()}
     </>
   );
 }

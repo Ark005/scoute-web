@@ -14,6 +14,9 @@ type Slot = {
   mode?: string;
   minutes?: number;
   distance_km?: number;
+  is_event?: boolean;
+  event_date?: string;
+  ticket_url?: string;
   extra?: any;
 };
 
@@ -235,7 +238,19 @@ export default function TripTimeline({
                       )}
                       {/* Per-slot buy buttons */}
                       <div className="flex items-center gap-1.5 mt-auto pt-1 flex-wrap">
-                        {!isMeal && s.name && (
+                        {s.is_event && s.ticket_url && (
+                          <a
+                            href={s.ticket_url}
+                            target="_blank"
+                            rel="noopener sponsored"
+                            className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-md transition hover:scale-105 text-white"
+                            style={{ background: "#F97316" }}
+                            title="Купить билет на событие"
+                          >
+                            🎫 Купить билет
+                          </a>
+                        )}
+                        {!isMeal && !s.is_event && s.name && (
                           <a
                             href={`https://www.getyourguide.com/s/?q=${encodeURIComponent(s.name)}`}
                             target="_blank"

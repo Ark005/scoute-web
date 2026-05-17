@@ -107,21 +107,88 @@ export function getTransport(slug: string, startLat: number, startLng: number): 
   return { car_km, car_hours, ...lookup };
 }
 
-export function aviasalesUrl(iata: string): string {
-  // Ближайшие даты +30 дней
-  const d = new Date();
-  d.setDate(d.getDate() + 30);
-  const dd = String(d.getDate()).padStart(2, "0");
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  return affiliateUrl(`https://www.aviasales.ru/search/MOW${dd}${mm}${iata}1`, { subId: iata });
+function ddmm(iso?: string | null, fallbackDaysAhead = 30): string {
+  let d: Date;
+  if (iso) {
+    d = new Date(iso + "T00:00:00");
+    if (isNaN(d.getTime())) {
+      d = new Date();
+      d.setDate(d.getDate() + fallbackDaysAhead);
+    }
+  } else {
+    d = new Date();
+    d.setDate(d.getDate() + fallbackDaysAhead);
+  }
+  return String(d.getDate()).padStart(2, "0") + String(d.getMonth() + 1).padStart(2, "0");
+}
+
+export function aviasalesUrl(iata: string, dateFrom?: string | null, dateTo?: string | null): string {
+  // Aviasales URL: /search/MOW{DDMM}{IATA}{DDMM_back}1
+  // Если дат нет — даём только туда +30 дней (как было).
+  const out = ddmm(dateFrom, 30);
+  const back = dateTo ? ddmm(dateTo, 37) : "";
+  return affiliateUrl(`https://www.aviasales.ru/search/MOW${out}${iata}${back}1`, { subId: iata });
 }
 
 export function tutuUrl(city: string): string {
   return `https://www.tutu.ru/poezda/wizard/?st1=%D0%9C%D0%BE%D1%81%D0%BA%D0%B2%D0%B0&st2=${encodeURIComponent(city)}&direction=from`;
 }
 
-export function localrentUrl(country: string): string {
-  return `https://www.localrent.com/${country}`;
+// Город назначения → IATA для прилёта (Aviasales). Если city отсутствует
+// в карте — фолбэк по стране (TBS для Грузии).
+const CITY_TO_IATA: Record<string, string> = {
+  tbilisi: "TBS",
+  batumi: "BUS",
+  kutaisi: "KUT",
+  mestia: "KUT",
+  gudauri: "TBS",
+  bakuriani: "TBS",
+  borjomi: "TBS",
+  kazbegi: "TBS",
+  sighnaghi: "TBS",
+  telavi: "TBS",
+  mtskheta: "TBS",
+  gori: "TBS",
+};
+
+const COUNTRY_TO_IATA: Record<string, string> = {
+  georgia: "TBS",
+  armenia: "EVN",
+  belarus: "MSQ",
+};
+
+export function destinationIata(citySlug?: string | null, countrySlug?: string | null): string | null {
+  if (citySlug && CITY_TO_IATA[citySlug]) return CITY_TO_IATA[citySlug];
+  if (countrySlug && COUNTRY_TO_IATA[countrySlug]) return COUNTRY_TO_IATA[countrySlug];
+  return null;
+}
+
+// Маппинг страны → код Localrent. Если страны нет — null (кнопку не показываем).
+const COUNTRY_TO_LOCALRENT: Record<string, string> = {
+  georgia: "georgia",
+  armenia: "armenia",
+};
+
+export function localrentCountry(countrySlug?: string | null): string | null {
+  if (!countrySlug) return null;
+  return COUNTRY_TO_LOCALRENT[countrySlug] || null;
+}
+
+export interface LocalrentOpts {
+  pickupCity?: string;
+  returnCity?: string;
+  dateFrom?: string | null;
+  dateTo?: string | null;
+}
+
+export function localrentUrl(country: string, opts?: LocalrentOpts): string {
+  const params = new URLSearchParams();
+  if (opts?.pickupCity) params.set("pickup_city", opts.pickupCity);
+  if (opts?.returnCity) params.set("return_city", opts.returnCity);
+  if (opts?.dateFrom) params.set("pickup_date", opts.dateFrom);
+  if (opts?.dateTo) params.set("return_date", opts.dateTo);
+  const qs = params.toString();
+  return `https://www.localrent.com/${country}${qs ? `?${qs}` : ""}`;
 }
 
 // Поиск отелей на Ostrovok.ru. Сырая ссылка — Travelpayouts Drive
@@ -146,8 +213,12 @@ const OSTROVOK_SLUGS: Record<string, string> = {
   "рустави": "georgia/rustavi", "rustavi": "georgia/rustavi",
 };
 
-export function ostrovokUrl(cityName: string): string {
+export function ostrovokUrl(cityName: string, dateFrom?: string | null, dateTo?: string | null): string {
   const slug = OSTROVOK_SLUGS[cityName.toLowerCase().trim()];
-  if (slug) return `https://ostrovok.ru/hotel/${slug}/`;
-  return `https://ostrovok.ru/?q=${encodeURIComponent(cityName)}`;
+  const params = new URLSearchParams();
+  if (dateFrom) params.set("checkin", dateFrom);
+  if (dateTo) params.set("checkout", dateTo);
+  const qs = params.toString();
+  if (slug) return `https://ostrovok.ru/hotel/${slug}/${qs ? `?${qs}` : ""}`;
+  return `https://ostrovok.ru/?q=${encodeURIComponent(cityName)}${qs ? `&${qs}` : ""}`;
 }
