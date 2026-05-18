@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { thumbUrl } from "@/lib/thumb";
 
 type Slot = {
   type: string;
@@ -198,9 +199,10 @@ export default function TripTimeline({
                         className="shrink-0 w-24 sm:w-32 bg-gray-100 relative group"
                       >
                         <img
-                          src={absUrl(s.image_url)}
+                          src={thumbUrl(s.image_url, { w: 256, h: 256, q: 75, fit: "cover" })}
                           alt={s.name || ""}
                           loading="lazy"
+                          decoding="async"
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                       </Link>
@@ -328,9 +330,10 @@ export default function TripTimeline({
                       <div className="aspect-[4/3] bg-gray-100">
                         {p.image_url && (
                           <img
-                            src={absUrl(p.image_url)}
+                            src={thumbUrl(p.image_url, { w: 300, h: 225, q: 75, fit: "cover" })}
                             alt={p.name || ""}
                             loading="lazy"
+                            decoding="async"
                             className="w-full h-full object-cover"
                           />
                         )}

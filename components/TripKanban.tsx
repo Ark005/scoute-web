@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { pushTrip } from "@/lib/trip-history";
 import CityTransferBlock from "@/components/CityTransferBlock";
 import { recalcDay } from "@/lib/recalcDay";
+import { thumbUrl } from "@/lib/thumb";
 
 type Slot = {
   type: string;
@@ -658,7 +659,7 @@ export default function TripKanban({ tripId, tripTitle, days, citySlug, countryS
                                 >
                                   <div className="flex gap-2">
                                     {slot.image_url ? (
-                                      <img src={absUrl(slot.image_url)} alt="" className="w-12 h-12 object-cover rounded flex-shrink-0" loading="lazy" />
+                                      <img src={thumbUrl(slot.image_url, { w: 96, h: 96, q: 75, fit: "cover" })} alt="" className="w-12 h-12 object-cover rounded flex-shrink-0" loading="lazy" decoding="async" />
                                     ) : (
                                       <div className="w-12 h-12 flex-shrink-0 rounded flex items-center justify-center text-xl" style={{ background: `${color}15` }}>
                                         {slotIcon(slot)}
@@ -892,7 +893,7 @@ function PickerRow({ items, kind, onDragStart, loaded }: {
             style={{ width: 200, border: "1px solid #E5E7EB" }}
           >
             {item.image_url ? (
-              <img src={absUrl(item.image_url)} alt="" className="w-full h-24 object-cover" loading="lazy" />
+              <img src={thumbUrl(item.image_url, { w: 400, h: 200, q: 75, fit: "cover" })} alt="" className="w-full h-24 object-cover" loading="lazy" decoding="async" />
             ) : (
               <div className="w-full h-24 flex items-center justify-center text-3xl bg-gray-100">
                 {kind === "culture" ? "🎭" : kind === "restaurants" ? "🍴" : "🎫"}

@@ -2,8 +2,8 @@ import { notFound } from "next/navigation";
 import { getCities, getCityPOIsFromAPI } from "@/lib/api";
 import type { Metadata } from "next";
 import Link from "next/link";
-import Image from "next/image";
 import AddToTripButton from "@/components/AddToTripButton";
+import { thumbUrl } from "@/lib/thumb";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://scoute.app/api";
 const isLocal = BASE_URL.includes("localhost") || BASE_URL.includes("127.0.0.1");
@@ -153,14 +153,16 @@ export default async function POIPage({
       </nav>
 
       {imageUrl && (
-        <div className="relative w-full h-64 md:h-96 rounded-xl overflow-hidden mb-6">
-          <Image
-            src={imageUrl}
-            alt={poi.name}
-            fill
-            className="object-cover"
+        <div className="relative w-full h-64 md:h-96 rounded-xl overflow-hidden mb-6 bg-gray-100">
+          <img
+            src={thumbUrl(imageUrl, { w: 1200, q: 78, fit: "cover" })}
+            srcSet={`${thumbUrl(imageUrl, { w: 600, q: 75, fit: "cover" })} 600w, ${thumbUrl(imageUrl, { w: 1200, q: 78, fit: "cover" })} 1200w`}
             sizes="(max-width: 768px) 100vw, 768px"
-            priority
+            alt={poi.name}
+            loading="eager"
+            fetchPriority="high"
+            decoding="async"
+            className="absolute inset-0 w-full h-full object-cover"
           />
         </div>
       )}
