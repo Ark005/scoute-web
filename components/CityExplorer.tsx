@@ -173,11 +173,17 @@ export default function CityExplorer({ citySlug, cityName, pois, events = [] }: 
 
   const filteredPois = useMemo(() => {
     const s = search.toLowerCase().trim();
-    return pois.filter((p) => {
-      if (!matchesFilter(p, filter)) return false;
-      if (s && !p.name.toLowerCase().includes(s)) return false;
-      return true;
-    });
+    return pois
+      .filter((p) => {
+        if (!matchesFilter(p, filter)) return false;
+        if (s && !p.name.toLowerCase().includes(s)) return false;
+        return true;
+      })
+      .sort((a, b) => {
+        const aHas = a.image_url ? 1 : 0;
+        const bHas = b.image_url ? 1 : 0;
+        return bHas - aHas;
+      });
   }, [pois, filter, search]);
 
   const restaurants = useMemo(
@@ -415,8 +421,9 @@ export default function CityExplorer({ citySlug, cityName, pois, events = [] }: 
                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                               />
                             ) : (
-                              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 text-4xl">
-                                {cat.emoji}
+                              <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 text-gray-400">
+                                <div className="text-4xl mb-1 opacity-60">{cat.emoji}</div>
+                                <div className="text-[10px] uppercase tracking-wider">фото в работе</div>
                               </div>
                             )}
                             <div
@@ -431,7 +438,7 @@ export default function CityExplorer({ citySlug, cityName, pois, events = [] }: 
                               className="font-bold text-sm leading-tight mb-1.5"
                               style={{ color: "#0F172A" }}
                             >
-                              {p.name}
+                              {p.name.replace(/^📍\s*/, "")}
                             </div>
                             <div className="flex items-center gap-2 text-[11px] text-gray-500">
                               {p.rating ? <span>⭐ {p.rating}</span> : null}
