@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { pushTrip } from "@/lib/trip-history";
 import CityTransferBlock from "@/components/CityTransferBlock";
+import { recalcDay } from "@/lib/recalcDay";
 
 type Slot = {
   type: string;
@@ -18,6 +19,9 @@ type Slot = {
   ticket_url?: string;
   latitude?: number;
   longitude?: number;
+  transfer_minutes?: number;
+  transfer_mode?: "walk" | "car";
+  transfer_km?: number;
 };
 
 type Day = { day?: number; slots?: Slot[]; items?: Slot[]; city_slug?: string };
@@ -232,6 +236,8 @@ export default function TripKanban({ tripId, tripTitle, days, citySlug, countryS
     if (!dragged) { setDragOver(null); return; }
     const targetIdx = dragOver?.dayIdx === targetDayIdx ? dragOver.idx : Number.MAX_SAFE_INTEGER;
 
+    let changed: Day[] | null = null;
+
     setBoard(prev => {
       const next = prev.map(d => ({ ...d, slots: [...(d.slots || [])] }));
 
@@ -240,6 +246,7 @@ export default function TripKanban({ tripId, tripTitle, days, citySlug, countryS
         .filter(x => x.s.type !== "transit");
 
       let movedSlot: Slot | null = null;
+      const sourceDayIdx = dragged.from === "board" ? dragged.dayIdx : undefined;
       if (dragged.from === "board" && dragged.dayIdx !== undefined && dragged.slotIdx !== undefined) {
         movedSlot = next[dragged.dayIdx].slots![dragged.slotIdx];
         next[dragged.dayIdx].slots!.splice(dragged.slotIdx, 1);
@@ -254,11 +261,60 @@ export default function TripKanban({ tripId, tripTitle, days, citySlug, countryS
         insertAt = targetCards[targetIdx].realIdx;
       }
       next[targetDayIdx].slots!.splice(insertAt, 0, movedSlot);
+
+      // Пересчёт времён для затронутых дней
+      next[targetDayIdx].slots = recalcDay(next[targetDayIdx].slots!);
+      if (sourceDayIdx !== undefined && sourceDayIdx !== targetDayIdx) {
+        next[sourceDayIdx].slots = recalcDay(next[sourceDayIdx].slots!);
+      }
+      changed = next;
       return next;
     });
     setDragged(null);
     setDragOver(null);
+    if (changed) scheduleAutosave(changed);
   };
+
+  // ── Autosave after drop ──────────────────────────────────────────────────
+  // Debounced — несколько drop'ов подряд = одно сохранение.
+
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  const scheduleAutosave = (boardSnapshot: Day[]) => {
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => persistBoard(boardSnapshot), 1200);
+  };
+
+  const persistBoard = async (snapshot: Day[]) => {
+    setSaving(true);
+    try {
+      const renumbered = snapshot.map((d, i) => ({ ...d, day: i + 1 }));
+      const slugs = Array.from(new Set(renumbered.map(d => d.city_slug || citySlug || "").filter(Boolean)));
+      const r = await fetch("/api/trip/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: tripTitle,
+          country_slug: countrySlug || "georgia",
+          city_slug: slugs[0] || citySlug || "tbilisi",
+          program: { days: renumbered },
+          meta: { multi_city: slugs },
+          source: "kanban_drop",
+        }),
+      });
+      if (!r.ok) throw new Error(`save ${r.status}`);
+      const saved = await r.json();
+      pushTrip({ id: saved.id, title: tripTitle, citySlug: slugs[0] || citySlug || "tbilisi", countrySlug: countrySlug || "georgia" });
+      router.replace(`/trip/${saved.id}`);
+    } catch (err) {
+      console.error("autosave failed", err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  useEffect(() => () => { if (saveTimer.current) clearTimeout(saveTimer.current); }, []);
 
   // ── Save merged trip helper ──────────────────────────────────────────────
 
@@ -405,9 +461,16 @@ export default function TripKanban({ tripId, tripTitle, days, citySlug, countryS
 
   return (
     <section className="mb-8">
-      <h2 className="text-xl font-extrabold mb-2" style={{ color: "var(--dark)" }}>
-        Доска маршрута
-      </h2>
+      <div className="flex items-center gap-2 mb-2">
+        <h2 className="text-xl font-extrabold" style={{ color: "var(--dark)" }}>
+          Доска маршрута
+        </h2>
+        {saving && (
+          <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "#FEF3C7", color: "#92400E" }}>
+            ⏳ Сохраняем…
+          </span>
+        )}
+      </div>
       <p className="text-sm text-gray-500 mb-4">
         Перетаскивайте карточки между днями и внутри дня. Снизу — что ещё можно добавить.
       </p>
@@ -564,9 +627,16 @@ export default function TripKanban({ tripId, tripTitle, days, citySlug, countryS
                             const showDropAbove = dragOver?.dayIdx === globalIdx && dragOver.idx === cardIdx;
                             const label = slotLabel(slot);
                             const poiHref = slot.id && (slot.type === "attraction" || slot.is_event) ? `/poi/attraction/${slot.id}` : null;
+                            const showTransfer = cardIdx > 0 && (slot.transfer_minutes ?? 0) > 0;
                             return (
                               <div key={originalIdx}>
                                 {showDropAbove && <div style={{ height: 3, background: color, borderRadius: 2, marginBottom: 6 }} />}
+                                {showTransfer && (
+                                  <div className="flex items-center gap-1 pl-2 py-0.5 text-[10px] italic text-gray-400 select-none">
+                                    <span>↓</span>
+                                    <span>{slot.transfer_minutes} мин{slot.transfer_mode === "car" ? " на машине" : " пешком"}{slot.transfer_km ? ` · ${slot.transfer_km} км` : ""}</span>
+                                  </div>
+                                )}
                                 <div
                                   draggable
                                   onDragStart={() => onCardDragStart(globalIdx, originalIdx)}
