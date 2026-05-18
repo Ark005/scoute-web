@@ -626,7 +626,13 @@ export default function TripKanban({ tripId, tripTitle, days, citySlug, countryS
                             const isDragging = dragged?.from === "board" && dragged.dayIdx === globalIdx && dragged.slotIdx === originalIdx;
                             const showDropAbove = dragOver?.dayIdx === globalIdx && dragOver.idx === cardIdx;
                             const label = slotLabel(slot);
-                            const poiHref = slot.id && (slot.type === "attraction" || slot.is_event) ? `/poi/attraction/${slot.id}` : null;
+                            const poiHref = slot.id
+                              ? (slot.type === "restaurant" || slot.type === "lunch" || slot.type === "dinner" || slot.type === "breakfast")
+                                  ? `/poi/restaurant/${slot.id}`
+                                  : (slot.type === "attraction" || slot.is_event)
+                                      ? `/poi/attraction/${slot.id}`
+                                      : null
+                              : null;
                             const showTransfer = cardIdx > 0 && (slot.transfer_minutes ?? 0) > 0;
                             return (
                               <div key={originalIdx}>
@@ -641,7 +647,13 @@ export default function TripKanban({ tripId, tripTitle, days, citySlug, countryS
                                   draggable
                                   onDragStart={() => onCardDragStart(globalIdx, originalIdx)}
                                   onDragOver={(e) => onSlotDragOver(e, globalIdx, cardIdx)}
-                                  className="bg-white rounded-lg p-2 cursor-grab active:cursor-grabbing relative group"
+                                  onClick={(e) => {
+                                    if (poiHref) {
+                                      e.stopPropagation();
+                                      router.push(poiHref);
+                                    }
+                                  }}
+                                  className={`bg-white rounded-lg p-2 relative group ${poiHref ? "cursor-pointer hover:shadow-md transition-shadow" : "cursor-grab"} active:cursor-grabbing`}
                                   style={{ border: "1px solid #E5E7EB", opacity: isDragging ? 0.4 : 1 }}
                                 >
                                   <div className="flex gap-2">
@@ -655,7 +667,7 @@ export default function TripKanban({ tripId, tripTitle, days, citySlug, countryS
                                     <div className="flex-1 min-w-0">
                                       <div className="text-[10px] font-mono font-bold" style={{ color }}>
                                         {slot.time || "—"}
-                                        {slot.duration_min ? <span className="text-gray-400 font-normal"> · {slot.duration_min}м</span> : null}
+                                        {slot.duration_min ? <span className="text-gray-400 font-normal"> · {slot.duration_min} мин</span> : null}
                                       </div>
                                       <div className="text-xs font-semibold leading-tight mt-0.5 line-clamp-2" style={{ color: "var(--dark)" }}>
                                         {slot.name || "—"}
@@ -665,19 +677,6 @@ export default function TripKanban({ tripId, tripTitle, days, citySlug, countryS
                                       )}
                                     </div>
                                   </div>
-                                  {poiHref && (
-                                    <a
-                                      href={poiHref}
-                                      onClick={(e) => e.stopPropagation()}
-                                      onMouseDown={(e) => e.stopPropagation()}
-                                      onDragStart={(e) => e.preventDefault()}
-                                      className="absolute top-1 right-1 w-6 h-6 rounded bg-white opacity-0 group-hover:opacity-100 flex items-center justify-center text-xs transition"
-                                      style={{ border: "1px solid #E5E7EB", color: "#3B82F6" }}
-                                      title="Подробнее"
-                                    >
-                                      ↗
-                                    </a>
-                                  )}
                                   {slot.is_event && slot.ticket_url && (
                                     <a
                                       href={slot.ticket_url}
