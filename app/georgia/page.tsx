@@ -450,35 +450,9 @@ export default async function GeorgiaPage() {
             <div className="text-gray-500 text-sm">Города загружаются…</div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {/* Регион Кахетия — синтетическая карточка: в БД нет отдельного
-                  city.kakheti, но регион важный (винный). Ведёт на маршрут. */}
-              <Link
-                href="/routes/georgia-wine-kakheti"
-                className="group block rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-xl transition-all"
-                style={{ border: "1px solid #E5E7EB" }}
-              >
-                <div className="relative aspect-[3/4] bg-gray-100 overflow-hidden">
-                  <Image
-                    src="https://scoute.app/media/cached_images/attraction_1923_f89c889b21.jpg"
-                    alt="Кахетия — Алазанская долина, винный регион"
-                    fill
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    className="object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
-                  <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-                    <div
-                      className="font-bold text-2xl leading-tight mb-1"
-                      style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
-                    >
-                      Кахетия
-                    </div>
-                    <div className="text-xs text-white/80">
-                      Винный регион · Сигнахи · Телави · Кварели
-                    </div>
-                  </div>
-                </div>
-              </Link>
+              {/* Кахетия отдельной карточкой не дублируется: винная тема
+                  закрыта карточкой «Винная Кахетия» в блоке «По темам»,
+                  а города региона (Сигнахи, Телави) — в сетке ниже. */}
               {cityCards.map((c) => (
                 <Link
                   key={c.slug}
