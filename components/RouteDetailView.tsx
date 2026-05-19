@@ -422,14 +422,15 @@ export default function RouteDetailView({ route }: Props) {
               </div>
             )}
 
-            {/* Planner CTA */}
-            <Link
-              href={`/routes/${route.slug}/plan`}
-              className="block text-center text-white text-sm font-bold py-3 rounded-xl transition hover:opacity-90"
+            {/* Единственный выход с маршрута — «Сделать своим» → /trip/{id}.
+                Бывшая ссылка «Открыть планировщик» вела в тупик /plan (удалён). */}
+            <button
+              onClick={() => setShowOnboarding(true)}
+              className="block w-full text-center text-white text-sm font-bold py-3 rounded-xl transition hover:opacity-90"
               style={{ background: "var(--blue)" }}
             >
-              Открыть планировщик →
-            </Link>
+              ✦ Сделать этот маршрут своим
+            </button>
           </div>
         </div>
       </div>
