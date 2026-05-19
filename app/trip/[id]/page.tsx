@@ -7,6 +7,7 @@ import TripTimeline from "@/components/TripTimeline";
 import TripKanban from "@/components/TripKanban";
 import TourBlock from "@/components/TourBlock";
 import StickyBuyBar from "@/components/StickyBuyBar";
+import ShareTrip from "@/components/ShareTrip";
 import { cityLabel, countryLabel } from "@/lib/labels";
 import {
   aviasalesUrl,
@@ -364,23 +365,10 @@ export default async function TripPage({
       {trip.city_slug && <TourBlock citySlug={trip.city_slug} />}
 
       {/* Share */}
-      <div
-        className="rounded-2xl border p-5"
-        style={{ borderColor: "#E5E7EB", background: "white" }}
-      >
-        <div className="font-semibold mb-2" style={{ color: "var(--dark)" }}>
-          Поделиться программой
-        </div>
-        <div className="text-sm text-gray-600 mb-3">
-          Эта ссылка работает в браузере и в приложении:
-        </div>
-        <div
-          className="font-mono text-xs p-3 rounded-lg break-all"
-          style={{ background: "#F9FAFB", color: "var(--dark)" }}
-        >
-          {trip.share_url}
-        </div>
-      </div>
+      <ShareTrip
+        shareUrl={trip.share_url || `https://scoute.app/trip/${trip.id}`}
+        title={trip.title || ""}
+      />
     </main>
 
     {/* Sticky CTA bar — единственное что приносит деньги */}
