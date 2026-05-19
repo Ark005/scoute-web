@@ -126,6 +126,10 @@ export default function TripKanban({ tripId, tripTitle, days, citySlug, countryS
   const [dragged, setDragged] = useState<{ from: "board" | "panel"; dayIdx?: number; slotIdx?: number; slot?: Slot } | null>(null);
   const [dragOver, setDragOver] = useState<{ dayIdx: number; idx: number } | null>(null);
   const [openPanel, setOpenPanel] = useState<"excursions" | "culture" | "restaurants" | null>(null);
+  // Раскладка содержимого панели: «лента» (горизонтальный скролл) или «доска» (сетка с переносом).
+  const [layoutByKind, setLayoutByKind] = useState<{
+    excursions: "strip" | "board"; culture: "strip" | "board"; restaurants: "strip" | "board";
+  }>({ excursions: "strip", culture: "strip", restaurants: "strip" });
   const [activeCitySlug, setActiveCitySlug] = useState<string>(citySlug || "tbilisi");
   const [showAddCity, setShowAddCity] = useState(false);
   const [addingCity, setAddingCity] = useState(false);
@@ -456,6 +460,12 @@ export default function TripKanban({ tripId, tripTitle, days, citySlug, countryS
       setAddError(e instanceof Error ? e.message : "Ошибка");
       setAddingCity(false);
     }
+  };
+
+  // ── Open POI detail from picker ──────────────────────────────────────────
+
+  const openPoi = (kind: "excursions" | "restaurants", item: PoiItem) => {
+    router.push(kind === "restaurants" ? `/poi/restaurant/${item.id}` : `/poi/attraction/${item.id}`);
   };
 
   // ── Render ───────────────────────────────────────────────────────────────
@@ -830,7 +840,17 @@ export default function TripKanban({ tripId, tripTitle, days, citySlug, countryS
           onClick={() => setOpenPanel(openPanel === "excursions" ? null : "excursions")}
         />
         {openPanel === "excursions" && (
-          <PickerRow items={activeCityPois.excursions} kind="excursions" onDragStart={(it) => onPanelDragStart(it, "excursions")} loaded={isLoaded} />
+          <>
+            <LayoutToggle layout={layoutByKind.excursions} onChange={(l) => setLayoutByKind(p => ({ ...p, excursions: l }))} />
+            <PickerRow
+              items={activeCityPois.excursions}
+              kind="excursions"
+              layout={layoutByKind.excursions}
+              onDragStart={(it) => onPanelDragStart(it, "excursions")}
+              onCardClick={(it) => openPoi("excursions", it)}
+              loaded={isLoaded}
+            />
+          </>
         )}
 
         <PanelButton
@@ -841,7 +861,16 @@ export default function TripKanban({ tripId, tripTitle, days, citySlug, countryS
           onClick={() => setOpenPanel(openPanel === "culture" ? null : "culture")}
         />
         {openPanel === "culture" && (
-          <PickerRow items={activeCityPois.culture} kind="culture" onDragStart={(it) => onPanelDragStart(it, "culture")} loaded={isLoaded} />
+          <>
+            <LayoutToggle layout={layoutByKind.culture} onChange={(l) => setLayoutByKind(p => ({ ...p, culture: l }))} />
+            <PickerRow
+              items={activeCityPois.culture}
+              kind="culture"
+              layout={layoutByKind.culture}
+              onDragStart={(it) => onPanelDragStart(it, "culture")}
+              loaded={isLoaded}
+            />
+          </>
         )}
 
         <PanelButton
@@ -852,7 +881,17 @@ export default function TripKanban({ tripId, tripTitle, days, citySlug, countryS
           onClick={() => setOpenPanel(openPanel === "restaurants" ? null : "restaurants")}
         />
         {openPanel === "restaurants" && (
-          <PickerRow items={activeCityPois.restaurants} kind="restaurants" onDragStart={(it) => onPanelDragStart(it, "restaurants")} loaded={isLoaded} />
+          <>
+            <LayoutToggle layout={layoutByKind.restaurants} onChange={(l) => setLayoutByKind(p => ({ ...p, restaurants: l }))} />
+            <PickerRow
+              items={activeCityPois.restaurants}
+              kind="restaurants"
+              layout={layoutByKind.restaurants}
+              onDragStart={(it) => onPanelDragStart(it, "restaurants")}
+              onCardClick={(it) => openPoi("restaurants", it)}
+              loaded={isLoaded}
+            />
+          </>
         )}
       </div>
     </section>
@@ -876,42 +915,88 @@ function PanelButton({ label, emoji, count, open, onClick }: { label: string; em
   );
 }
 
-function PickerRow({ items, kind, onDragStart, loaded }: {
-  items: PoiItem[]; kind: "excursions" | "culture" | "restaurants"; onDragStart: (it: PoiItem) => void; loaded: boolean;
+// Переключатель раскладки панели: лента ↔ доска.
+function LayoutToggle({ layout, onChange }: {
+  layout: "strip" | "board"; onChange: (l: "strip" | "board") => void;
+}) {
+  const options: { val: "strip" | "board"; label: string }[] = [
+    { val: "strip", label: "≡ Лента" },
+    { val: "board", label: "▦ Доска" },
+  ];
+  return (
+    <div className="flex items-center gap-1.5 px-1">
+      <span className="text-[11px] text-gray-400 mr-1">Показать:</span>
+      {options.map(o => (
+        <button
+          key={o.val}
+          onClick={() => onChange(o.val)}
+          className="text-xs px-2.5 py-1 rounded-lg transition"
+          style={{
+            background: layout === o.val ? "#1B4DFF" : "white",
+            color: layout === o.val ? "white" : "#6B7280",
+            border: `1px solid ${layout === o.val ? "#1B4DFF" : "#E5E7EB"}`,
+            fontWeight: layout === o.val ? 700 : 500,
+          }}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function PickerRow({ items, kind, layout, onDragStart, onCardClick, loaded }: {
+  items: PoiItem[];
+  kind: "excursions" | "culture" | "restaurants";
+  layout: "strip" | "board";
+  onDragStart: (it: PoiItem) => void;
+  onCardClick?: (it: PoiItem) => void;
+  loaded: boolean;
 }) {
   if (!loaded) return <div className="text-xs text-gray-400 p-3">загрузка...</div>;
   if (!items.length) return <div className="text-xs text-gray-400 p-3">пока пусто</div>;
+
+  const renderCard = (item: PoiItem) => (
+    <div
+      key={`${kind}-${item.id}`}
+      draggable
+      onDragStart={() => onDragStart(item)}
+      onClick={onCardClick ? () => onCardClick(item) : undefined}
+      className={`bg-white rounded-xl overflow-hidden flex-shrink-0 active:cursor-grabbing transition hover:scale-[1.02] hover:shadow-md ${onCardClick ? "cursor-pointer" : "cursor-grab"}`}
+      style={{ width: 200, border: "1px solid #E5E7EB" }}
+    >
+      {item.image_url ? (
+        <img src={thumbUrl(item.image_url, { w: 400, h: 200, q: 75, fit: "cover" })} alt="" className="w-full h-24 object-cover" loading="lazy" decoding="async" />
+      ) : (
+        <div className="w-full h-24 flex items-center justify-center text-3xl bg-gray-100">
+          {kind === "culture" ? "🎭" : kind === "restaurants" ? "🍴" : "🎫"}
+        </div>
+      )}
+      <div className="p-2">
+        <div className="text-xs font-bold leading-tight line-clamp-2" style={{ color: "var(--dark)" }}>{item.name}</div>
+        {kind === "culture" && item.event_date && (
+          <div className="text-[10px] text-gray-500 mt-1">
+            {new Date(item.event_date).toLocaleDateString("ru-RU", { day: "numeric", month: "long" })}
+          </div>
+        )}
+        {kind !== "culture" && item.rating ? (
+          <div className="text-[10px] text-gray-500 mt-1">★ {item.rating.toFixed(1)}</div>
+        ) : null}
+      </div>
+    </div>
+  );
+
+  if (layout === "board") {
+    return (
+      <div className="flex flex-wrap gap-3 p-1 max-h-[65vh] overflow-y-auto">
+        {items.map(renderCard)}
+      </div>
+    );
+  }
   return (
     <div className="overflow-x-auto pb-2">
       <div className="flex gap-3" style={{ minWidth: "min-content" }}>
-        {items.map(item => (
-          <div
-            key={`${kind}-${item.id}`}
-            draggable
-            onDragStart={() => onDragStart(item)}
-            className="bg-white rounded-xl overflow-hidden flex-shrink-0 cursor-grab active:cursor-grabbing transition hover:scale-[1.02]"
-            style={{ width: 200, border: "1px solid #E5E7EB" }}
-          >
-            {item.image_url ? (
-              <img src={thumbUrl(item.image_url, { w: 400, h: 200, q: 75, fit: "cover" })} alt="" className="w-full h-24 object-cover" loading="lazy" decoding="async" />
-            ) : (
-              <div className="w-full h-24 flex items-center justify-center text-3xl bg-gray-100">
-                {kind === "culture" ? "🎭" : kind === "restaurants" ? "🍴" : "🎫"}
-              </div>
-            )}
-            <div className="p-2">
-              <div className="text-xs font-bold leading-tight line-clamp-2" style={{ color: "var(--dark)" }}>{item.name}</div>
-              {kind === "culture" && item.event_date && (
-                <div className="text-[10px] text-gray-500 mt-1">
-                  {new Date(item.event_date).toLocaleDateString("ru-RU", { day: "numeric", month: "long" })}
-                </div>
-              )}
-              {kind !== "culture" && item.rating ? (
-                <div className="text-[10px] text-gray-500 mt-1">★ {item.rating.toFixed(1)}</div>
-              ) : null}
-            </div>
-          </div>
-        ))}
+        {items.map(renderCard)}
       </div>
     </div>
   );
