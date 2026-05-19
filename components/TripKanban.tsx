@@ -6,6 +6,7 @@ import { pushTrip } from "@/lib/trip-history";
 import CityTransferBlock from "@/components/CityTransferBlock";
 import { recalcDay } from "@/lib/recalcDay";
 import SafeImg from "@/components/SafeImg";
+import SlotDetailModal from "@/components/SlotDetailModal";
 
 type Slot = {
   type: string;
@@ -15,6 +16,7 @@ type Slot = {
   duration_min?: number;
   image_url?: string;
   description?: string;
+  tip?: string;
   is_event?: boolean;
   event_date?: string;
   ticket_url?: string;
@@ -143,6 +145,8 @@ export default function TripKanban({ tripId, tripTitle, days, citySlug, countryS
   const [editError, setEditError] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
   const [menuOpenFor, setMenuOpenFor] = useState<number | null>(null);
+  // Деталь точки доски — для точек без POI-страницы (авторские маршруты).
+  const [detailSlot, setDetailSlot] = useState<Slot | null>(null);
 
   // Per-city POI data
   const [poiByCity, setPoiByCity] = useState<Record<string, { excursions: PoiItem[]; culture: PoiItem[]; restaurants: PoiItem[] }>>({});
@@ -473,6 +477,7 @@ export default function TripKanban({ tripId, tripTitle, days, citySlug, countryS
 
   return (
     <section className="mb-8">
+      {detailSlot && <SlotDetailModal slot={detailSlot} onClose={() => setDetailSlot(null)} />}
       <div className="flex items-center gap-2 mb-2">
         <h2 className="text-xl font-extrabold" style={{ color: "var(--dark)" }}>
           Доска маршрута
@@ -660,12 +665,11 @@ export default function TripKanban({ tripId, tripTitle, days, citySlug, countryS
                                   onDragStart={() => onCardDragStart(globalIdx, originalIdx)}
                                   onDragOver={(e) => onSlotDragOver(e, globalIdx, cardIdx)}
                                   onClick={(e) => {
-                                    if (poiHref) {
-                                      e.stopPropagation();
-                                      router.push(poiHref);
-                                    }
+                                    e.stopPropagation();
+                                    if (poiHref) router.push(poiHref);
+                                    else if (slot.description || slot.tip) setDetailSlot(slot);
                                   }}
-                                  className={`bg-white rounded-lg p-2 relative group ${poiHref ? "cursor-pointer hover:shadow-md transition-shadow" : "cursor-grab"} active:cursor-grabbing`}
+                                  className={`bg-white rounded-lg p-2 relative group ${poiHref || slot.description || slot.tip ? "cursor-pointer hover:shadow-md transition-shadow" : "cursor-grab"} active:cursor-grabbing`}
                                   style={{ border: "1px solid #E5E7EB", opacity: isDragging ? 0.4 : 1 }}
                                 >
                                   <div className="flex gap-2">

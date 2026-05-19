@@ -6,22 +6,22 @@
 import type { RouteDetail, Waypoint } from "./types";
 import { recalcDay } from "./recalcDay";
 
-// Опорные координаты грузинских городов — для определения «ближайшего города»
+// Опорные данные грузинских городов — для определения «ближайшего города»
 // точки маршрута. lib/cities-data.ts координат не содержит, поэтому таблица здесь.
-const CITY_COORDS: Record<string, { lat: number; lng: number }> = {
-  tbilisi:   { lat: 41.693, lng: 44.801 },
-  batumi:    { lat: 41.645, lng: 41.640 },
-  kutaisi:   { lat: 42.270, lng: 42.706 },
-  mtskheta:  { lat: 41.845, lng: 44.720 },
-  sighnaghi: { lat: 41.617, lng: 45.922 },
-  telavi:    { lat: 41.919, lng: 45.473 },
-  kvareli:   { lat: 41.949, lng: 45.812 },
-  borjomi:   { lat: 41.840, lng: 43.380 },
-  bakuriani: { lat: 41.748, lng: 43.532 },
-  gudauri:   { lat: 42.477, lng: 44.483 },
-  kazbegi:   { lat: 42.656, lng: 44.643 },
-  mestia:    { lat: 43.043, lng: 42.729 },
-  gori:      { lat: 41.984, lng: 44.109 },
+const CITY_INFO: Record<string, { lat: number; lng: number; ru: string }> = {
+  tbilisi:   { lat: 41.693, lng: 44.801, ru: "Тбилиси" },
+  batumi:    { lat: 41.645, lng: 41.640, ru: "Батуми" },
+  kutaisi:   { lat: 42.270, lng: 42.706, ru: "Кутаиси" },
+  mtskheta:  { lat: 41.845, lng: 44.720, ru: "Мцхета" },
+  sighnaghi: { lat: 41.617, lng: 45.922, ru: "Сигнахи" },
+  telavi:    { lat: 41.919, lng: 45.473, ru: "Телави" },
+  kvareli:   { lat: 41.949, lng: 45.812, ru: "Кварели" },
+  borjomi:   { lat: 41.840, lng: 43.380, ru: "Боржоми" },
+  bakuriani: { lat: 41.748, lng: 43.532, ru: "Бакуриани" },
+  gudauri:   { lat: 42.477, lng: 44.483, ru: "Гудаури" },
+  kazbegi:   { lat: 42.656, lng: 44.643, ru: "Казбеги" },
+  mestia:    { lat: 43.043, lng: 42.729, ru: "Местия" },
+  gori:      { lat: 41.984, lng: 44.109, ru: "Гори" },
 };
 
 const DEFAULT_CITY = "tbilisi";
@@ -35,19 +35,24 @@ export type BoardSlot = {
   name: string;
   time: string;
   description: string;
+  tip: string;
   latitude?: number;
   longitude?: number;
   image_url?: string;
   duration_min: number;
-  id?: number;
 };
 
 export type BoardDay = { day: number; city_slug: string; slots: BoardSlot[] };
 
+// Русское название города по слагу.
+export function cityRu(slug: string): string {
+  return CITY_INFO[slug]?.ru || slug.charAt(0).toUpperCase() + slug.slice(1);
+}
+
 function nearestCity(lat: number, lng: number): string {
   let best = DEFAULT_CITY;
   let bestDist = Infinity;
-  for (const [slug, c] of Object.entries(CITY_COORDS)) {
+  for (const [slug, c] of Object.entries(CITY_INFO)) {
     // квадрат евклидова расстояния — для сравнения внутри Грузии достаточно
     const d = (lat - c.lat) ** 2 + (lng - c.lng) ** 2;
     if (d < bestDist) {
@@ -64,6 +69,9 @@ function slotType(wpType: string): string {
   return "attraction";
 }
 
+// Точка маршрута → карточка доски. id намеренно НЕ переносим: у waypoint'а
+// свой PK, не совпадающий с POI, — поэтому деталь точки показываем модалкой
+// (description + tip), а не переходом на /poi/<id>.
 function toSlot(wp: Waypoint, idx: number): BoardSlot {
   return {
     type: slotType(wp.waypoint_type),
@@ -71,11 +79,11 @@ function toSlot(wp: Waypoint, idx: number): BoardSlot {
     // стартовое время; recalcDay пересчитает с учётом переездов
     time: `${String(9 + idx).padStart(2, "0")}:00`,
     description: wp.description || "",
+    tip: wp.tip || "",
     latitude: typeof wp.latitude === "number" ? wp.latitude : undefined,
     longitude: typeof wp.longitude === "number" ? wp.longitude : undefined,
     image_url: wp.image_url || "",
     duration_min: wp.duration_min || 60,
-    id: wp.id,
   };
 }
 
