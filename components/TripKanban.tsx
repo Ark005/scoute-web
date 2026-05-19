@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { pushTrip } from "@/lib/trip-history";
 import CityTransferBlock from "@/components/CityTransferBlock";
 import { recalcDay } from "@/lib/recalcDay";
-import { thumbUrl } from "@/lib/thumb";
+import SafeImg from "@/components/SafeImg";
 
 type Slot = {
   type: string;
@@ -668,13 +668,19 @@ export default function TripKanban({ tripId, tripTitle, days, citySlug, countryS
                                   style={{ border: "1px solid #E5E7EB", opacity: isDragging ? 0.4 : 1 }}
                                 >
                                   <div className="flex gap-2">
-                                    {slot.image_url ? (
-                                      <img src={thumbUrl(slot.image_url, { w: 96, h: 96, q: 75, fit: "cover" })} alt="" className="w-12 h-12 object-cover rounded flex-shrink-0" loading="lazy" decoding="async" />
-                                    ) : (
-                                      <div className="w-12 h-12 flex-shrink-0 rounded flex items-center justify-center text-xl" style={{ background: `${color}15` }}>
-                                        {slotIcon(slot)}
-                                      </div>
-                                    )}
+                                    <SafeImg
+                                      src={slot.image_url}
+                                      alt=""
+                                      w={96}
+                                      h={96}
+                                      fit="cover"
+                                      className="w-12 h-12 object-cover rounded flex-shrink-0"
+                                      fallback={
+                                        <div className="w-12 h-12 flex-shrink-0 rounded flex items-center justify-center text-xl" style={{ background: `${color}15` }}>
+                                          {slotIcon(slot)}
+                                        </div>
+                                      }
+                                    />
                                     <div className="flex-1 min-w-0">
                                       <div className="text-[10px] font-mono font-bold" style={{ color }}>
                                         {slot.time || "—"}
@@ -965,13 +971,19 @@ function PickerRow({ items, kind, layout, onDragStart, onCardClick, loaded }: {
       className={`bg-white rounded-xl overflow-hidden flex-shrink-0 active:cursor-grabbing transition hover:scale-[1.02] hover:shadow-md ${onCardClick ? "cursor-pointer" : "cursor-grab"}`}
       style={{ width: 200, border: "1px solid #E5E7EB" }}
     >
-      {item.image_url ? (
-        <img src={thumbUrl(item.image_url, { w: 400, h: 200, q: 75, fit: "cover" })} alt="" className="w-full h-24 object-cover" loading="lazy" decoding="async" />
-      ) : (
-        <div className="w-full h-24 flex items-center justify-center text-3xl bg-gray-100">
-          {kind === "culture" ? "🎭" : kind === "restaurants" ? "🍴" : "🎫"}
-        </div>
-      )}
+      <SafeImg
+        src={item.image_url}
+        alt=""
+        w={400}
+        h={200}
+        fit="cover"
+        className="w-full h-24 object-cover"
+        fallback={
+          <div className="w-full h-24 flex items-center justify-center text-3xl bg-gray-100">
+            {kind === "culture" ? "🎭" : kind === "restaurants" ? "🍴" : "🎫"}
+          </div>
+        }
+      />
       <div className="p-2">
         <div className="text-xs font-bold leading-tight line-clamp-2" style={{ color: "var(--dark)" }}>{item.name}</div>
         {kind === "culture" && item.event_date && (

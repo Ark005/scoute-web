@@ -8,6 +8,8 @@ import { useRouter } from "next/navigation";
 import { RouteDetail, Waypoint } from "@/lib/types";
 import { REGION_LABELS } from "@/lib/regions";
 import { CITIES } from "@/lib/cities-data";
+import { thumbUrl } from "@/lib/thumb";
+import SafeImg from "./SafeImg";
 import TransportBlock from "./TransportBlock";
 import WikimediaCredit from "./WikimediaCredit";
 import TripOnboardingDialog, { OnboardingResult } from "./TripOnboardingDialog";
@@ -198,11 +200,10 @@ export default function RouteDetailView({ route }: Props) {
           >
             ×
           </button>
-          <Image
-            src={lightboxImg}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={thumbUrl(lightboxImg, { w: 1600, q: 85, fit: "contain" })}
             alt="Фото"
-            width={1200}
-            height={800}
             className="max-w-full max-h-[90vh] object-contain rounded-lg"
           />
         </div>
@@ -549,6 +550,7 @@ function WaypointCard({
   const isHotel = wp.waypoint_type === "hotel";
   const isRestaurant = wp.waypoint_type === "restaurant";
   const isGas = wp.waypoint_type === "gas";
+  const [imgFailed, setImgFailed] = useState(false);
 
   return (
     <div
@@ -612,18 +614,22 @@ function WaypointCard({
             </p>
           )}
 
-          {/* Image — clickable for lightbox */}
-          {wp.image_url && (
+          {/* Image — clickable for lightbox. Битое фото (404, фейковый URL)
+              скрываем целиком, чтобы не висела заглушка с alt-текстом,
+              дублирующим заголовок карточки. */}
+          {wp.image_url && !imgFailed && (
             <div
               className="mt-2 rounded-lg overflow-hidden relative h-32 cursor-zoom-in"
               onClick={(e) => { e.stopPropagation(); onImageClick(wp.image_url); }}
             >
-              <Image
-                src={wp.image_url}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={thumbUrl(wp.image_url, { w: 600, h: 256, q: 75, fit: "cover" })}
                 alt={wp.name}
-                fill
-                className="object-cover hover:scale-105 transition-transform duration-300"
-                sizes="400px"
+                onError={() => setImgFailed(true)}
+                loading="lazy"
+                decoding="async"
+                className="absolute inset-0 w-full h-full object-cover hover:scale-105 transition-transform duration-300"
               />
               <div className="absolute bottom-1 right-1.5">
                 <WikimediaCredit imageUrl={wp.image_url} />
@@ -769,12 +775,13 @@ function WaypointCard({
                   className="shrink-0 w-20 h-14 rounded-lg overflow-hidden relative cursor-zoom-in"
                   onClick={(e) => { e.stopPropagation(); onImageClick(img); }}
                 >
-                  <Image
+                  <SafeImg
                     src={img}
                     alt={`${wp.name} ${i + 1}`}
-                    fill
-                    className="object-cover hover:scale-110 transition-transform"
-                    sizes="80px"
+                    w={160}
+                    h={112}
+                    fit="cover"
+                    className="absolute inset-0 w-full h-full object-cover hover:scale-110 transition-transform"
                   />
                 </div>
               ))}
