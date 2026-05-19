@@ -337,8 +337,8 @@ export default async function GeorgiaPage() {
                 title: "Винная Кахетия",
                 regions: "Сигнахи · Телави · Кварели · Алазани",
                 body: "8 000 лет виноделия, квеври, семейные погреба и закаты над долиной. Дегустации в Напареули и Цинандали, монастырь Бодбе и виноградники до горизонта.",
-                image: "https://scoute.app/media/cached_images/attraction_1747_ba8cb6dd93.jpg",
-                alt: "Кахетинская дорога — виноградники долины Алазани",
+                image: "https://scoute.app/media/route_covers/georgia-wine-kakheti.jpg",
+                alt: "Кахетия — виноградные долины под Кавказом",
               },
               {
                 href: "/routes/georgia-svaneti",
