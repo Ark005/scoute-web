@@ -38,6 +38,7 @@ const CITY_META: Record<string, { label: string; emoji: string }> = {
   mtskheta:   { label: "Мцхета",    emoji: "⛪" },
   sighnaghi:  { label: "Сигнахи",   emoji: "🍷" },
   telavi:     { label: "Телави",    emoji: "🍇" },
+  kvareli:    { label: "Кварели",   emoji: "🍷" },
   borjomi:    { label: "Боржоми",   emoji: "🌲" },
   gudauri:    { label: "Гудаури",   emoji: "⛷️" },
   bakuriani:  { label: "Бакуриани", emoji: "🎿" },

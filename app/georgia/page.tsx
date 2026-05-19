@@ -332,7 +332,7 @@ export default async function GeorgiaPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {[
               {
-                href: "/routes/georgia-wine-kakheti",
+                href: "/trip/route/georgia-wine-kakheti",
                 emoji: "🍷",
                 title: "Винная Кахетия",
                 regions: "Сигнахи · Телави · Кварели · Алазани",
@@ -341,7 +341,7 @@ export default async function GeorgiaPage() {
                 alt: "Кахетия — виноградные долины под Кавказом",
               },
               {
-                href: "/routes/georgia-svaneti",
+                href: "/trip/route/georgia-svaneti",
                 emoji: "🥾",
                 title: "Трекинг по Кавказу",
                 regions: "Сванетия · Хевсуретия · Тушетия",
@@ -350,7 +350,7 @@ export default async function GeorgiaPage() {
                 alt: "Деревня Ушгули — самая высокогорная в Европе",
               },
               {
-                href: "/routes/georgia-kazbegi",
+                href: "/trip/route/georgia-kazbegi",
                 emoji: "🏔",
                 title: "К Казбеку",
                 regions: "Гудаури · Ананури · Гергети · Степанцминда",
@@ -368,7 +368,7 @@ export default async function GeorgiaPage() {
                 alt: "Абанотубани — серные бани Тбилиси",
               },
               {
-                href: "/routes/georgia-historical",
+                href: "/trip/route/georgia-historical",
                 emoji: "🏛",
                 title: "Древности и фрески",
                 regions: "Мцхета · Уплисцихе · Кутаиси · Гелати",
@@ -377,7 +377,7 @@ export default async function GeorgiaPage() {
                 alt: "Уплисцихе — пещерный город",
               },
               {
-                href: "/routes/georgia-batumi-beach",
+                href: "/trip/route/georgia-batumi-beach",
                 emoji: "🏖",
                 title: "Чёрное море",
                 regions: "Батуми · Гонио · Уреки · Кобулети",
@@ -519,7 +519,7 @@ export default async function GeorgiaPage() {
               {routes.map((r) => (
                 <Link
                   key={r.slug}
-                  href={`/routes/${r.slug}`}
+                  href={`/trip/route/${r.slug}`}
                   className="group block rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-xl transition-all"
                   style={{ border: "1px solid #E5E7EB" }}
                 >
