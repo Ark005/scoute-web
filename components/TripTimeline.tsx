@@ -238,9 +238,10 @@ export default function TripTimeline({
                           {s.description}
                         </p>
                       )}
-                      {/* Per-slot buy buttons */}
-                      <div className="flex items-center gap-1.5 mt-auto pt-1 flex-wrap">
-                        {s.is_event && s.ticket_url && (
+                      {/* Per-slot buy button — только реальный билет на событие.
+                          GYG/TripAdvisor поиск-ссылки убраны: партнёрки нет, $0 + утечка трафика. */}
+                      {s.is_event && s.ticket_url && (
+                        <div className="flex items-center gap-1.5 mt-auto pt-1 flex-wrap">
                           <a
                             href={s.ticket_url}
                             target="_blank"
@@ -251,32 +252,8 @@ export default function TripTimeline({
                           >
                             🎫 Купить билет
                           </a>
-                        )}
-                        {!isMeal && !s.is_event && s.name && (
-                          <a
-                            href={`https://www.getyourguide.com/s/?q=${encodeURIComponent(s.name)}`}
-                            target="_blank"
-                            rel="noopener sponsored"
-                            className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-md transition hover:scale-105"
-                            style={{ background: "#FFF7ED", color: "#C2410C" }}
-                            title="Найти экскурсию или билет на GetYourGuide"
-                          >
-                            🎫 Билет / экскурсия
-                          </a>
-                        )}
-                        {isMeal && s.name && (
-                          <a
-                            href={`https://www.tripadvisor.com/Search?q=${encodeURIComponent(s.name)}`}
-                            target="_blank"
-                            rel="noopener"
-                            className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-md transition hover:scale-105"
-                            style={{ background: "#FFF7ED", color: "#C2410C" }}
-                            title="Найти на TripAdvisor"
-                          >
-                            🍽 Забронировать
-                          </a>
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </div>
                   </article>
                 );
